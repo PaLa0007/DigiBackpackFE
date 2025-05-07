@@ -1,12 +1,24 @@
 import { create } from 'zustand';
 
+type User = {
+  id: number;
+  username: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: string;
+};
+
 type AuthState = {
-  token: string | null;
-  setToken: (token: string) => void;
+  user: User | null;
+  setUser: (user: User) => void;
+  clearUser: () => void;
 };
 
 export const useAuth = create<AuthState>((set) => ({
-  token: null,
-  setToken: (token: string) => set({ token }),
+  user: null,
+  setUser: (user) => set({ user }),
+  clearUser: () => set({ user: null }),
 }));
+
 
