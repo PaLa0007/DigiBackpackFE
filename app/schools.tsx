@@ -14,6 +14,11 @@ import {
 import { fetchSchools } from '../src/api/schools';
 import { useAuth } from '../src/store/auth';
 
+import { addSchool } from '../src/api/schools';
+import AddSchoolModal from './addSchoolModal';
+
+
+
 const PAGE_SIZE = 5; // Show 5 schools per page for now
 
 type School = {
@@ -25,6 +30,10 @@ type School = {
 };
 
 export default function Schools() {
+
+    const [isModalVisible, setModalVisible] = useState(false);
+
+
     const { data, isLoading, error } = useQuery<School[]>({
         queryKey: ['schools'],
         queryFn: fetchSchools,
@@ -162,7 +171,7 @@ export default function Schools() {
                     <Text style={styles.header}>Schools</Text>
                     <Button
                         title="Add New School"
-                        onPress={() => console.log('Add New School pressed')}
+                        onPress={() => setModalVisible(true)}
                         color="#F15A22"
                     />
                 </View>
@@ -230,6 +239,29 @@ export default function Schools() {
                         }
                     />
                 </View>
+
+                {/* Add School Form */}
+                <AddSchoolModal
+                    isVisible={isModalVisible}
+                    onClose={() => setModalVisible(false)}
+                    onSubmit={async (formData) => {
+                        console.log('Submit new school:', formData);
+
+                        try {
+                            const newSchool = await addSchool(formData);
+                            console.log('Successfully added:', newSchool);
+                            // Ideally you can now refetch or update the local list:
+                            router.replace('/schools'); // simple way to refresh
+                        } catch (error) {
+                            console.error('Failed to add school:', error);
+                            alert('Failed to add school');
+                        }
+
+                        setModalVisible(false);
+                    }}
+                />
+
+
             </View>
         </View>
     );
