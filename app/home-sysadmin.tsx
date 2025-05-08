@@ -75,7 +75,7 @@ export default function HomeSysAdmin() {
             styles.sidebarItem,
             pathname === '/schools' && styles.activeSidebarItem,
           ]}
-          //onPress={() => router.replace('/schools')}
+          onPress={() => router.replace('/schools')}
         >
           <Text
             style={[
