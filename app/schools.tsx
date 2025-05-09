@@ -5,11 +5,16 @@ import { ActivityIndicator, Button, FlatList, StyleSheet, Text, View, } from 're
 import { addSchool, deleteSchool, fetchSchools } from '../src/api/schools';
 import { useAuth } from '../src/store/auth';
 
+import AddSchoolAdminModal from './addSchoolAdminModal';
 import AddSchoolModal from './addSchoolModal';
+import EditSchoolModal from './editSchoolModal';
 import ManageSchoolModal from './manageSchoolModal';
+
+
 import SchoolCard from './schoolCard';
 import SchoolControls from './schoolControls';
 import SidebarItem from './sidebarItem';
+
 
 const PAGE_SIZE = 5; // Show 5 schools per page for now
 
@@ -25,6 +30,9 @@ export default function Schools() {
     const [isModalVisible, setModalVisible] = useState(false);
     const [selectedSchool, setSelectedSchool] = useState<School | null>(null);
     const [showManageModal, setShowManageModal] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [showAddAdminModal, setShowAddAdminModal] = useState(false);
+
 
     const { data, isLoading, error } = useQuery<School[]>({
         queryKey: ['schools'],
@@ -42,27 +50,27 @@ export default function Schools() {
 
     const filteredSchools = data
         ? data
-              .filter((school) =>
-                  school.name.toLowerCase().includes(searchQuery.toLowerCase())
-              )
-              .sort((a: School, b: School) => {
-                  switch (sortOption) {
-                      case 'name_asc':
-                          return a.name.localeCompare(b.name);
-                      case 'name_desc':
-                          return b.name.localeCompare(a.name);
-                      case 'newest':
-                          return b.id - a.id;
-                      case 'oldest':
-                          return a.id - b.id;
-                      case 'city_asc':
-                          return a.city.localeCompare(b.city);
-                      case 'country_asc':
-                          return a.country.localeCompare(b.country);
-                      default:
-                          return 0;
-                  }
-              })
+            .filter((school) =>
+                school.name.toLowerCase().includes(searchQuery.toLowerCase())
+            )
+            .sort((a: School, b: School) => {
+                switch (sortOption) {
+                    case 'name_asc':
+                        return a.name.localeCompare(b.name);
+                    case 'name_desc':
+                        return b.name.localeCompare(a.name);
+                    case 'newest':
+                        return b.id - a.id;
+                    case 'oldest':
+                        return a.id - b.id;
+                    case 'city_asc':
+                        return a.city.localeCompare(b.city);
+                    case 'country_asc':
+                        return a.country.localeCompare(b.country);
+                    default:
+                        return 0;
+                }
+            })
         : [];
 
     const totalPages = Math.ceil(filteredSchools.length / PAGE_SIZE);
@@ -114,7 +122,7 @@ export default function Schools() {
                     icon="👥"
                     path="/users"
                     currentPath={pathname}
-                    onPress={() => {}}
+                    onPress={() => { }}
                 />
 
                 <View style={{ flex: 1 }} />
@@ -212,11 +220,11 @@ export default function Schools() {
                         onClose={() => setShowManageModal(false)}
                         onEdit={() => {
                             setShowManageModal(false);
-                            // TODO: Show EditSchoolModal or open edit form
+                            setShowEditModal(true);
                         }}
                         onRegisterAdmin={() => {
                             setShowManageModal(false);
-                            // TODO: Show AddSchoolAdminModal
+                            setShowAddAdminModal(true);
                         }}
                         onDelete={async () => {
                             try {
@@ -230,6 +238,30 @@ export default function Schools() {
                             }
                         }}
                     />
+                )}
+
+                {selectedSchool && (
+                    <>
+                        <EditSchoolModal
+                            school={selectedSchool}
+                            isVisible={showEditModal}
+                            onClose={() => setShowEditModal(false)}
+                            onSave={() => {
+                                setShowEditModal(false);
+                                router.replace('/schools'); // refresh
+                            }}
+                        />
+
+                        <AddSchoolAdminModal
+                            schoolId={selectedSchool.id}
+                            isVisible={showAddAdminModal}
+                            onClose={() => setShowAddAdminModal(false)}
+                            onSave={() => {
+                                setShowAddAdminModal(false);
+                                // optionally refetch admins if needed
+                            }}
+                        />
+                    </>
                 )}
             </View>
         </View>
