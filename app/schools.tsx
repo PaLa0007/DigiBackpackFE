@@ -14,8 +14,11 @@ import {
 import { fetchSchools } from '../src/api/schools';
 import { useAuth } from '../src/store/auth';
 
-import { addSchool } from '../src/api/schools';
+import { addSchool, deleteSchool } from '../src/api/schools';
+
 import AddSchoolModal from './addSchoolModal';
+import ManageSchoolModal from './manageSchoolModal';
+
 
 
 
@@ -32,6 +35,9 @@ type School = {
 export default function Schools() {
 
     const [isModalVisible, setModalVisible] = useState(false);
+
+    const [selectedSchool, setSelectedSchool] = useState<School | null>(null);
+    const [showManageModal, setShowManageModal] = useState(false);
 
 
     const { data, isLoading, error } = useQuery<School[]>({
@@ -211,9 +217,10 @@ export default function Schools() {
                             <Text style={styles.cardText}>{item.address}</Text>
                             <TouchableOpacity
                                 style={styles.manageButton}
-                                onPress={() =>
-                                    console.log(`Manage School ID: ${item.id}`)
-                                }
+                                onPress={() => {
+                                    setSelectedSchool(item);    
+                                    setShowManageModal(true);     
+                                }}
                             >
                                 <Text style={styles.manageButtonText}>Manage</Text>
                             </TouchableOpacity>
@@ -260,6 +267,33 @@ export default function Schools() {
                         setModalVisible(false);
                     }}
                 />
+
+                {selectedSchool && (
+                    <ManageSchoolModal
+                        school={selectedSchool}
+                        isVisible={showManageModal}
+                        onClose={() => setShowManageModal(false)}
+                        onEdit={() => {
+                            setShowManageModal(false);
+                            // TODO: Show EditSchoolModal or open edit form
+                        }}
+                        onRegisterAdmin={() => {
+                            setShowManageModal(false);
+                            // TODO: Show AddSchoolAdminModal
+                        }}
+                        onDelete={async () => {
+                            try {
+                                await deleteSchool(selectedSchool.id);
+                                alert('School deleted successfully!');
+                                setShowManageModal(false);
+                                router.replace('/schools');  // or refetch data
+                            } catch (error) {
+                                console.error(error);
+                                alert('Failed to delete school.');
+                            }
+                        }}
+                    />
+                )}
 
 
             </View>
