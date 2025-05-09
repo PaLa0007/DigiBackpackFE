@@ -1,26 +1,15 @@
 import { useQuery } from '@tanstack/react-query';
 import { usePathname, useRouter } from 'expo-router';
 import { useState } from 'react';
-import {
-    ActivityIndicator,
-    Button,
-    FlatList,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
-} from 'react-native';
-import { fetchSchools } from '../src/api/schools';
+import { ActivityIndicator, Button, FlatList, StyleSheet, Text, View, } from 'react-native';
+import { addSchool, deleteSchool, fetchSchools } from '../src/api/schools';
 import { useAuth } from '../src/store/auth';
-
-import { addSchool, deleteSchool } from '../src/api/schools';
 
 import AddSchoolModal from './addSchoolModal';
 import ManageSchoolModal from './manageSchoolModal';
-
-
-
+import SchoolCard from './schoolCard';
+import SchoolControls from './schoolControls';
+import SidebarItem from './sidebarItem';
 
 const PAGE_SIZE = 5; // Show 5 schools per page for now
 
@@ -33,12 +22,9 @@ type School = {
 };
 
 export default function Schools() {
-
     const [isModalVisible, setModalVisible] = useState(false);
-
     const [selectedSchool, setSelectedSchool] = useState<School | null>(null);
     const [showManageModal, setShowManageModal] = useState(false);
-
 
     const { data, isLoading, error } = useQuery<School[]>({
         queryKey: ['schools'],
@@ -56,27 +42,27 @@ export default function Schools() {
 
     const filteredSchools = data
         ? data
-            .filter((school) =>
-                school.name.toLowerCase().includes(searchQuery.toLowerCase())
-            )
-            .sort((a: School, b: School) => {
-                switch (sortOption) {
-                    case 'name_asc':
-                        return a.name.localeCompare(b.name);
-                    case 'name_desc':
-                        return b.name.localeCompare(a.name);
-                    case 'newest':
-                        return b.id - a.id;
-                    case 'oldest':
-                        return a.id - b.id;
-                    case 'city_asc':
-                        return a.city.localeCompare(b.city);
-                    case 'country_asc':
-                        return a.country.localeCompare(b.country);
-                    default:
-                        return 0;
-                }
-            })
+              .filter((school) =>
+                  school.name.toLowerCase().includes(searchQuery.toLowerCase())
+              )
+              .sort((a: School, b: School) => {
+                  switch (sortOption) {
+                      case 'name_asc':
+                          return a.name.localeCompare(b.name);
+                      case 'name_desc':
+                          return b.name.localeCompare(a.name);
+                      case 'newest':
+                          return b.id - a.id;
+                      case 'oldest':
+                          return a.id - b.id;
+                      case 'city_asc':
+                          return a.city.localeCompare(b.city);
+                      case 'country_asc':
+                          return a.country.localeCompare(b.country);
+                      default:
+                          return 0;
+                  }
+              })
         : [];
 
     const totalPages = Math.ceil(filteredSchools.length / PAGE_SIZE);
@@ -107,68 +93,42 @@ export default function Schools() {
             <View style={styles.sidebar}>
                 <Text style={styles.sidebarHeader}>DigiBackpack</Text>
 
-                <TouchableOpacity
-                    style={[
-                        styles.sidebarItem,
-                        pathname === '/home-sysadmin' && styles.activeSidebarItem,
-                    ]}
+                <SidebarItem
+                    label="Dashboard"
+                    icon="🏠"
+                    path="/home-sysadmin"
+                    currentPath={pathname}
                     onPress={() => router.replace('/home-sysadmin')}
-                >
-                    <Text
-                        style={[
-                            styles.sidebarText,
-                            pathname === '/home-sysadmin' && styles.activeSidebarText,
-                        ]}
-                    >
-                        🏠 Dashboard
-                    </Text>
-                </TouchableOpacity>
+                />
 
-                <TouchableOpacity
-                    style={[
-                        styles.sidebarItem,
-                        pathname === '/schools' && styles.activeSidebarItem,
-                    ]}
+                <SidebarItem
+                    label="Schools"
+                    icon="🏫"
+                    path="/schools"
+                    currentPath={pathname}
                     onPress={() => router.replace('/schools')}
-                >
-                    <Text
-                        style={[
-                            styles.sidebarText,
-                            pathname === '/schools' && styles.activeSidebarText,
-                        ]}
-                    >
-                        🏫 Schools
-                    </Text>
-                </TouchableOpacity>
+                />
 
-                <TouchableOpacity
-                    style={[
-                        styles.sidebarItem,
-                        pathname === '/users' && styles.activeSidebarItem,
-                    ]}
-                //onPress={() => router.replace('/users')}
-                >
-                    <Text
-                        style={[
-                            styles.sidebarText,
-                            pathname === '/users' && styles.activeSidebarText,
-                        ]}
-                    >
-                        👥 Users
-                    </Text>
-                </TouchableOpacity>
+                <SidebarItem
+                    label="Users"
+                    icon="👥"
+                    path="/users"
+                    currentPath={pathname}
+                    onPress={() => {}}
+                />
 
                 <View style={{ flex: 1 }} />
 
-                <TouchableOpacity
-                    style={styles.sidebarItem}
+                <SidebarItem
+                    label="Logout"
+                    icon="🚪"
+                    path="/login"
+                    currentPath={pathname}
                     onPress={() => {
                         clearUser();
                         router.replace('/login');
                     }}
-                >
-                    <Text style={styles.sidebarText}>🚪 Logout</Text>
-                </TouchableOpacity>
+                />
             </View>
 
             {/* Main Content */}
@@ -183,48 +143,25 @@ export default function Schools() {
                 </View>
 
                 {/* Search + Sort */}
-                <View style={styles.controlsRow}>
-                    <TextInput
-                        style={styles.searchInput}
-                        placeholder="Search schools..."
-                        value={searchQuery}
-                        onChangeText={setSearchQuery}
-                    />
-                    <View style={styles.sortContainer}>
-                        <Text style={{ marginRight: 8, color: '#124E57' }}>Sort by:</Text>
-                        <select
-                            value={sortOption}
-                            onChange={(e) => setSortOption(e.target.value)}
-                            style={styles.sortSelect}
-                        >
-                            <option value="name_asc">Name (A-Z)</option>
-                            <option value="name_desc">Name (Z-A)</option>
-                            <option value="newest">Newest First</option>
-                            <option value="oldest">Oldest First</option>
-                            <option value="city_asc">City (A-Z)</option>
-                            <option value="country_asc">Country (A-Z)</option>
-                        </select>
-                    </View>
-                </View>
+                <SchoolControls
+                    searchQuery={searchQuery}
+                    onSearchChange={setSearchQuery}
+                    sortOption={sortOption}
+                    onSortChange={setSortOption}
+                />
 
                 {/* Schools List */}
                 <FlatList
                     data={paginatedSchools}
                     keyExtractor={(item) => item.id.toString()}
                     renderItem={({ item }) => (
-                        <View style={styles.card}>
-                            <Text style={styles.cardTitle}>{item.name}</Text>
-                            <Text style={styles.cardText}>{item.address}</Text>
-                            <TouchableOpacity
-                                style={styles.manageButton}
-                                onPress={() => {
-                                    setSelectedSchool(item);    
-                                    setShowManageModal(true);     
-                                }}
-                            >
-                                <Text style={styles.manageButtonText}>Manage</Text>
-                            </TouchableOpacity>
-                        </View>
+                        <SchoolCard
+                            school={item}
+                            onManage={() => {
+                                setSelectedSchool(item);
+                                setShowManageModal(true);
+                            }}
+                        />
                     )}
                 />
 
@@ -247,7 +184,7 @@ export default function Schools() {
                     />
                 </View>
 
-                {/* Add School Form */}
+                {/* Add School Modal */}
                 <AddSchoolModal
                     isVisible={isModalVisible}
                     onClose={() => setModalVisible(false)}
@@ -257,8 +194,7 @@ export default function Schools() {
                         try {
                             const newSchool = await addSchool(formData);
                             console.log('Successfully added:', newSchool);
-                            // Ideally you can now refetch or update the local list:
-                            router.replace('/schools'); // simple way to refresh
+                            router.replace('/schools'); // refresh
                         } catch (error) {
                             console.error('Failed to add school:', error);
                             alert('Failed to add school');
@@ -268,6 +204,7 @@ export default function Schools() {
                     }}
                 />
 
+                {/* Manage School Modal */}
                 {selectedSchool && (
                     <ManageSchoolModal
                         school={selectedSchool}
@@ -286,7 +223,7 @@ export default function Schools() {
                                 await deleteSchool(selectedSchool.id);
                                 alert('School deleted successfully!');
                                 setShowManageModal(false);
-                                router.replace('/schools');  // or refetch data
+                                router.replace('/schools');
                             } catch (error) {
                                 console.error(error);
                                 alert('Failed to delete school.');
@@ -294,8 +231,6 @@ export default function Schools() {
                         }}
                     />
                 )}
-
-
             </View>
         </View>
     );
@@ -308,7 +243,7 @@ const styles = StyleSheet.create({
     },
     sidebar: {
         width: '15%',
-        backgroundColor: '#124E57', // Dark Teal
+        backgroundColor: '#124E57',
         padding: 16,
     },
     sidebarHeader: {
@@ -317,22 +252,6 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         marginBottom: 24,
         textAlign: 'center',
-    },
-    sidebarItem: {
-        paddingVertical: 12,
-    },
-    sidebarText: {
-        color: '#FFFFFF',
-        fontSize: 18,
-    }, activeSidebarItem: {
-        backgroundColor: '#15808D', // Balanced Teal
-        borderRadius: 8,
-        paddingVertical: 12,
-        paddingHorizontal: 8,
-        marginBottom: 8,
-    },
-    activeSidebarText: {
-        fontWeight: 'bold',
     },
     mainContent: {
         flex: 1,
@@ -349,62 +268,6 @@ const styles = StyleSheet.create({
         fontSize: 26,
         fontWeight: 'bold',
         color: '#124E57',
-    },
-    controlsRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 16,
-        flexWrap: 'wrap',
-    },
-    searchInput: {
-        borderWidth: 1,
-        borderColor: '#ccc',
-        borderRadius: 8,
-        padding: 8,
-        width: '60%',
-        marginBottom: 8,
-    },
-    sortContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        width: '35%',
-    },
-    sortSelect: {
-        padding: 8,
-        borderRadius: 8,
-        borderColor: '#ccc',
-    },
-    card: {
-        backgroundColor: '#E0F7FA',
-        padding: 16,
-        borderRadius: 8,
-        marginBottom: 12,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.15,
-        shadowRadius: 4,
-        elevation: 3,
-    },
-    cardTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#124E57',
-        marginBottom: 4,
-    },
-    cardText: {
-        color: '#124E57',
-        marginBottom: 8,
-    },
-    manageButton: {
-        backgroundColor: '#15808D',
-        paddingVertical: 8,
-        borderRadius: 6,
-        alignItems: 'center',
-    },
-    manageButtonText: {
-        color: '#FFFFFF',
-        fontWeight: 'bold',
     },
     paginationRow: {
         flexDirection: 'row',
