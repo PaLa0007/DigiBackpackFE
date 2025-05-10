@@ -1,9 +1,10 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { usePathname, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Button, FlatList, StyleSheet, Text, View, } from 'react-native';
 import { addSchool, deleteSchool, fetchSchools } from '../../src/api/schools';
 import { useAuth } from '../../src/store/auth';
+
 
 import AddSchoolAdminModal from './Components/addSchoolAdminModal';
 import AddSchoolModal from './Components/addSchoolModal';
@@ -12,7 +13,8 @@ import EditSchoolModal from './Components/editSchoolModal';
 import ManageSchoolModal from './Components/manageSchoolModal';
 
 
-import SidebarItem from '../Shared/sidebarItem';
+//import SidebarItem from '../Shared/sidebarItem';
+import Sidebar from '../Shared/Sidebar';
 import SchoolCard from './Components/schoolCard';
 import SchoolControls from './Components/schoolControls';
 
@@ -37,6 +39,8 @@ export default function Schools() {
     const [showEditAdminModal, setShowEditAdminModal] = useState(false);
     const [refetchAdmins, setRefetchAdmins] = useState<(() => void) | null>(null);
     const [refetchSchoolDetails, setRefetchSchoolDetails] = useState<(() => void) | null>(null);
+    const queryClient = useQueryClient();
+
 
     const { data, isLoading, error } = useQuery<School[]>({
         queryKey: ['schools'],
@@ -102,46 +106,12 @@ export default function Schools() {
     return (
         <View style={styles.container}>
             {/* Sidebar */}
-            <View style={styles.sidebar}>
-                <Text style={styles.sidebarHeader}>DigiBackpack</Text>
-
-                <SidebarItem
-                    label="Dashboard"
-                    icon="🏠"
-                    path="/home-sysadmin"
-                    currentPath={pathname}
-                    onPress={() => router.replace('/home-sysadmin')}
-                />
-
-                <SidebarItem
-                    label="Schools"
-                    icon="🏫"
-                    path="/schools"
-                    currentPath={pathname}
-                    onPress={() => router.replace('../schools')}
-                />
-
-                <SidebarItem
-                    label="Users"
-                    icon="👥"
-                    path="/users"
-                    currentPath={pathname}
-                    onPress={() => { }}
-                />
-
-                <View style={{ flex: 1 }} />
-
-                <SidebarItem
-                    label="Logout"
-                    icon="🚪"
-                    path="/login"
-                    currentPath={pathname}
-                    onPress={() => {
-                        clearUser();
-                        router.replace('/login');
-                    }}
-                />
-            </View>
+            <Sidebar
+                onLogout={() => {
+                    clearUser();
+                    router.replace('/login');
+                }}
+            />
 
             {/* Main Content */}
             <View style={styles.mainContent}>
@@ -206,7 +176,7 @@ export default function Schools() {
                         try {
                             const newSchool = await addSchool(formData);
                             console.log('Successfully added:', newSchool);
-                            router.replace('../schools'); // refresh
+                            router.replace('/Schools/schools'); // refresh
                         } catch (error) {
                             console.error('Failed to add school:', error);
                             alert('Failed to add school');
@@ -234,7 +204,7 @@ export default function Schools() {
                                 await deleteSchool(selectedSchool.id);
                                 alert('School deleted successfully!');
                                 setShowManageModal(false);
-                                router.replace('../schools');
+                                router.replace('/Schools/schools');
                             } catch (error) {
                                 console.error(error);
                                 alert('Failed to delete school.');
@@ -259,9 +229,17 @@ export default function Schools() {
                             school={selectedSchool}
                             isVisible={showEditModal}
                             onClose={() => setShowEditModal(false)}
-                            onSave={() => {
+                            onSave={(updatedData) => {
                                 setShowEditModal(false);
-                                refetchSchoolDetails?.();  // ✅ Refresh the data
+                                refetchSchoolDetails?.();
+
+                                // 🔁 Update top-level school list
+                                queryClient.setQueryData(['schools'], (old: School[] | undefined) => {
+                                    if (!old) return [];
+                                    return old.map((s) =>
+                                        s.id === updatedData.id ? { ...s, ...updatedData } : s
+                                    );
+                                });
                             }}
                         />
 
@@ -301,18 +279,6 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         flexDirection: 'row',
-    },
-    sidebar: {
-        width: '15%',
-        backgroundColor: '#124E57',
-        padding: 16,
-    },
-    sidebarHeader: {
-        color: '#FFFFFF',
-        fontSize: 22,
-        fontWeight: 'bold',
-        marginBottom: 24,
-        textAlign: 'center',
     },
     mainContent: {
         flex: 1,

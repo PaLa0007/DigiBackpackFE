@@ -1,3 +1,4 @@
+import { useQueryClient } from '@tanstack/react-query';
 import React, { useState } from 'react';
 import { Button, Modal, StyleSheet, Text, TextInput, View } from 'react-native';
 import { updateSchool } from '../../../src/api/schools';
@@ -14,7 +15,7 @@ type EditSchoolModalProps = {
     school: School;
     isVisible: boolean;
     onClose: () => void;
-    onSave: () => void;
+    onSave: (updatedData: School) => void;
 };
 
 const EditSchoolModal: React.FC<EditSchoolModalProps> = ({
@@ -23,6 +24,8 @@ const EditSchoolModal: React.FC<EditSchoolModalProps> = ({
     onClose,
     onSave,
 }) => {
+    const queryClient = useQueryClient();
+
     const [formData, setFormData] = useState({
         name: school.name,
         address: school.address,
@@ -38,7 +41,7 @@ const EditSchoolModal: React.FC<EditSchoolModalProps> = ({
         try {
             await updateSchool(school.id, formData);
             alert('School updated successfully!');
-            onSave();
+            onSave({ id: school.id, ...formData });
             onClose();
         } catch (error) {
             console.error(error);

@@ -1,16 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
-import { useRouter } from 'expo-router';
-import {
-  ActivityIndicator,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { usePathname, useRouter } from 'expo-router';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { fetchSchools } from '../src/api/schools';
 import { useAuth } from '../src/store/auth';
 
-import { usePathname } from 'expo-router';
+import Sidebar from './Shared/Sidebar';
+
 
 
 export default function HomeSysAdmin() {
@@ -50,72 +45,13 @@ export default function HomeSysAdmin() {
   return (
     <View style={styles.container}>
       {/* Sidebar */}
-      <View style={styles.sidebar}>
-        <Text style={styles.sidebarHeader}>DigiBackpack</Text>
+      <Sidebar
+        onLogout={() => {
+          clearUser();
+          router.replace('/login');
+        }}
+      />
 
-        <TouchableOpacity
-          style={[
-            styles.sidebarItem,
-            pathname === '/home-sysadmin' && styles.activeSidebarItem,
-          ]}
-          onPress={() => router.replace('/home-sysadmin')}
-        >
-          <Text
-            style={[
-              styles.sidebarText,
-              pathname === '/home-sysadmin' && styles.activeSidebarText,
-            ]}
-          >
-            🏠 Dashboard
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[
-            styles.sidebarItem,
-            pathname === '/schools' && styles.activeSidebarItem,
-          ]}
-          onPress={() => router.replace('/schools')}
-        >
-          <Text
-            style={[
-              styles.sidebarText,
-              pathname === '/schools' && styles.activeSidebarText,
-            ]}
-          >
-            🏫 Schools
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[
-            styles.sidebarItem,
-            pathname === '/users' && styles.activeSidebarItem,
-          ]}
-          //onPress={() => router.replace('/users')}
-        >
-          <Text
-            style={[
-              styles.sidebarText,
-              pathname === '/users' && styles.activeSidebarText,
-            ]}
-          >
-            👥 Users
-          </Text>
-        </TouchableOpacity>
-
-        <View style={{ flex: 1 }} />
-
-        <TouchableOpacity
-          style={styles.sidebarItem}
-          onPress={() => {
-            clearUser();
-            router.replace('/login');
-          }}
-        >
-          <Text style={styles.sidebarText}>🚪 Logout</Text>
-        </TouchableOpacity>
-      </View>
 
 
       {/* Main Content */}
@@ -151,34 +87,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     flexDirection: 'row',
-  },
-  sidebar: {
-    width: '15%',
-    backgroundColor: '#124E57', // Dark Teal
-    padding: 16,
-  },
-  sidebarHeader: {
-    color: '#FFFFFF',
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginBottom: 24,
-    textAlign: 'center',
-  },
-  sidebarItem: {
-    paddingVertical: 12,
-  },
-  sidebarText: {
-    color: '#FFFFFF',
-    fontSize: 18,
-  },activeSidebarItem: {
-    backgroundColor: '#15808D', // Balanced Teal
-    borderRadius: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    marginBottom: 8,
-  },
-  activeSidebarText: {
-    fontWeight: 'bold',
   },
   mainContent: {
     flex: 1,
