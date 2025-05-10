@@ -1,33 +1,27 @@
 import React, { useState } from 'react';
 import { Button, Modal, StyleSheet, Text, TextInput, View } from 'react-native';
-import { updateSchool } from '../src/api/schools';
+import { registerSchoolAdmin } from '../../../src/api/users';
 
-type School = {
-    id: number;
-    name: string;
-    address: string;
-    city: string;
-    country: string;
-};
 
-type EditSchoolModalProps = {
-    school: School;
+type AddSchoolAdminModalProps = {
+    schoolId: number;
     isVisible: boolean;
     onClose: () => void;
     onSave: () => void;
 };
 
-const EditSchoolModal: React.FC<EditSchoolModalProps> = ({
-    school,
+const AddSchoolAdminModal: React.FC<AddSchoolAdminModalProps> = ({
+    schoolId,
     isVisible,
     onClose,
     onSave,
 }) => {
     const [formData, setFormData] = useState({
-        name: school.name,
-        address: school.address,
-        city: school.city,
-        country: school.country,
+        username: '',
+        email: '',
+        firstName: '',
+        lastName: '',
+        password: '',
     });
 
     const handleChange = (field: string, value: string) => {
@@ -36,13 +30,13 @@ const EditSchoolModal: React.FC<EditSchoolModalProps> = ({
 
     const handleSubmit = async () => {
         try {
-            await updateSchool(school.id, formData);
-            alert('School updated successfully!');
+            await registerSchoolAdmin(schoolId, formData);
+            alert('Admin registered successfully!');
             onSave();
             onClose();
         } catch (error) {
             console.error(error);
-            alert('Failed to update school.');
+            alert('Failed to register admin.');
         }
     };
 
@@ -50,17 +44,18 @@ const EditSchoolModal: React.FC<EditSchoolModalProps> = ({
         <Modal visible={isVisible} animationType="fade" transparent>
             <View style={styles.overlay}>
                 <View style={styles.modalContainer}>
-                    <Text style={styles.modalTitle}>Edit School</Text>
-                    {['name', 'address', 'city', 'country'].map((field) => (
+                    <Text style={styles.modalTitle}>Register School Admin</Text>
+                    {['username', 'email', 'firstName', 'lastName', 'password'].map((field) => (
                         <TextInput
                             key={field}
                             placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
                             value={formData[field as keyof typeof formData]}
                             onChangeText={(text) => handleChange(field, text)}
                             style={styles.input}
+                            secureTextEntry={field === 'password'}
                         />
                     ))}
-                    <Button title="Save Changes" color="#15808D" onPress={handleSubmit} />
+                    <Button title="Register" color="#15808D" onPress={handleSubmit} />
                     <View style={{ height: 10 }} />
                     <Button title="Cancel" color="#F15A22" onPress={onClose} />
                 </View>
@@ -99,4 +94,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default EditSchoolModal;
+export default AddSchoolAdminModal;

@@ -2,19 +2,19 @@ import { useQuery } from '@tanstack/react-query';
 import { usePathname, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Button, FlatList, StyleSheet, Text, View, } from 'react-native';
-import { addSchool, deleteSchool, fetchSchools } from '../src/api/schools';
-import { useAuth } from '../src/store/auth';
+import { addSchool, deleteSchool, fetchSchools } from '../../src/api/schools';
+import { useAuth } from '../../src/store/auth';
 
-import AddSchoolAdminModal from './addSchoolAdminModal';
-import AddSchoolModal from './addSchoolModal';
-import EditSchoolAdminModal from './editSchoolAdminModal';
-import EditSchoolModal from './editSchoolModal';
-import ManageSchoolModal from './manageSchoolModal';
+import AddSchoolAdminModal from './Components/addSchoolAdminModal';
+import AddSchoolModal from './Components/addSchoolModal';
+import EditSchoolAdminModal from './Components/editSchoolAdminModal';
+import EditSchoolModal from './Components/editSchoolModal';
+import ManageSchoolModal from './Components/manageSchoolModal';
 
 
-import SchoolCard from './schoolCard';
-import SchoolControls from './schoolControls';
-import SidebarItem from './sidebarItem';
+import SidebarItem from '../Shared/sidebarItem';
+import SchoolCard from './Components/schoolCard';
+import SchoolControls from './Components/schoolControls';
 
 
 const PAGE_SIZE = 5; // Show 5 schools per page for now
@@ -118,7 +118,7 @@ export default function Schools() {
                     icon="🏫"
                     path="/schools"
                     currentPath={pathname}
-                    onPress={() => router.replace('/schools')}
+                    onPress={() => router.replace('../schools')}
                 />
 
                 <SidebarItem
@@ -206,7 +206,7 @@ export default function Schools() {
                         try {
                             const newSchool = await addSchool(formData);
                             console.log('Successfully added:', newSchool);
-                            router.replace('/schools'); // refresh
+                            router.replace('../schools'); // refresh
                         } catch (error) {
                             console.error('Failed to add school:', error);
                             alert('Failed to add school');
@@ -234,7 +234,7 @@ export default function Schools() {
                                 await deleteSchool(selectedSchool.id);
                                 alert('School deleted successfully!');
                                 setShowManageModal(false);
-                                router.replace('/schools');
+                                router.replace('../schools');
                             } catch (error) {
                                 console.error(error);
                                 alert('Failed to delete school.');

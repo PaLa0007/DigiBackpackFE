@@ -1,27 +1,33 @@
 import React, { useState } from 'react';
 import { Button, Modal, StyleSheet, Text, TextInput, View } from 'react-native';
-import { registerSchoolAdmin } from '../src/api/users';
+import { updateSchool } from '../../../src/api/schools';
 
+type School = {
+    id: number;
+    name: string;
+    address: string;
+    city: string;
+    country: string;
+};
 
-type AddSchoolAdminModalProps = {
-    schoolId: number;
+type EditSchoolModalProps = {
+    school: School;
     isVisible: boolean;
     onClose: () => void;
     onSave: () => void;
 };
 
-const AddSchoolAdminModal: React.FC<AddSchoolAdminModalProps> = ({
-    schoolId,
+const EditSchoolModal: React.FC<EditSchoolModalProps> = ({
+    school,
     isVisible,
     onClose,
     onSave,
 }) => {
     const [formData, setFormData] = useState({
-        username: '',
-        email: '',
-        firstName: '',
-        lastName: '',
-        password: '',
+        name: school.name,
+        address: school.address,
+        city: school.city,
+        country: school.country,
     });
 
     const handleChange = (field: string, value: string) => {
@@ -30,13 +36,13 @@ const AddSchoolAdminModal: React.FC<AddSchoolAdminModalProps> = ({
 
     const handleSubmit = async () => {
         try {
-            await registerSchoolAdmin(schoolId, formData);
-            alert('Admin registered successfully!');
+            await updateSchool(school.id, formData);
+            alert('School updated successfully!');
             onSave();
             onClose();
         } catch (error) {
             console.error(error);
-            alert('Failed to register admin.');
+            alert('Failed to update school.');
         }
     };
 
@@ -44,18 +50,17 @@ const AddSchoolAdminModal: React.FC<AddSchoolAdminModalProps> = ({
         <Modal visible={isVisible} animationType="fade" transparent>
             <View style={styles.overlay}>
                 <View style={styles.modalContainer}>
-                    <Text style={styles.modalTitle}>Register School Admin</Text>
-                    {['username', 'email', 'firstName', 'lastName', 'password'].map((field) => (
+                    <Text style={styles.modalTitle}>Edit School</Text>
+                    {['name', 'address', 'city', 'country'].map((field) => (
                         <TextInput
                             key={field}
                             placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
                             value={formData[field as keyof typeof formData]}
                             onChangeText={(text) => handleChange(field, text)}
                             style={styles.input}
-                            secureTextEntry={field === 'password'}
                         />
                     ))}
-                    <Button title="Register" color="#15808D" onPress={handleSubmit} />
+                    <Button title="Save Changes" color="#15808D" onPress={handleSubmit} />
                     <View style={{ height: 10 }} />
                     <Button title="Cancel" color="#F15A22" onPress={onClose} />
                 </View>
@@ -94,4 +99,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default AddSchoolAdminModal;
+export default EditSchoolModal;

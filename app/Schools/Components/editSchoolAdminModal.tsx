@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { updateSchoolAdmin } from '../src/api/users';
+import { updateSchoolAdmin } from '../../../src/api/users';
 
 type EditSchoolAdminModalProps = {
     admin: {

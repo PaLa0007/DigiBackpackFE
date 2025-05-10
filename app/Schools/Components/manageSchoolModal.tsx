@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import React, { useEffect } from 'react';
 import { Button, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { fetchSchoolById } from '../src/api/schools';
-import { deleteSchoolAdmin, fetchSchoolAdmins } from '../src/api/users';
+import { fetchSchoolById } from '../../../src/api/schools';
+import { deleteSchoolAdmin, fetchSchoolAdmins } from '../../../src/api/users';
 
 
 // ✅ Define Admin type
