@@ -1,7 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Button, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { fetchSchoolAdmins } from '../src/api/users';
+import { fetchSchoolById } from '../src/api/schools';
+import { deleteSchoolAdmin, fetchSchoolAdmins } from '../src/api/users';
+
 
 // ✅ Define Admin type
 type Admin = {
@@ -26,6 +28,9 @@ type ManageSchoolModalProps = {
     onEdit: () => void;
     onRegisterAdmin: () => void;
     onDelete: () => void;
+    onEditAdmin: (admin: any) => void;
+    onAdminsRefetch?: (refetchFn: () => void) => void;
+    onSchoolRefetch?: (refetchFn: () => void) => void;
 };
 
 const ManageSchoolModal: React.FC<ManageSchoolModalProps> = ({
@@ -34,15 +39,50 @@ const ManageSchoolModal: React.FC<ManageSchoolModalProps> = ({
     onClose,
     onEdit,
     onRegisterAdmin,
-    onDelete
+    onDelete,
+    onEditAdmin,
+    onAdminsRefetch,
+    onSchoolRefetch
 }) => {
 
+    const { data: schoolDetails, refetch: refetchSchool } = useQuery({
+        queryKey: ['schoolDetails', school.id],
+        queryFn: () => fetchSchoolById(school.id),
+        enabled: isVisible && !!school,
+    });
+
     // ✅ Query for admins, now fully typed
-    const { data: admins, isLoading, error } = useQuery<Admin[]>({
+    const { data: admins, isLoading, error, refetch } = useQuery<Admin[]>({
         queryKey: ['schoolAdmins', school?.id],
         queryFn: () => fetchSchoolAdmins(school.id),
         enabled: isVisible && !!school,
     });
+
+    // ✅ Notify the parent about the refetch function
+    useEffect(() => {
+        if (isVisible && onAdminsRefetch) {
+            onAdminsRefetch(refetch);  // ✅ Pass the refetch function!
+        }
+    }, [isVisible, onAdminsRefetch, refetch]);
+
+    useEffect(() => {
+        if (isVisible && onSchoolRefetch) {
+            onSchoolRefetch(refetchSchool);  // ✅ Pass back the refetch function
+        }
+    }, [isVisible, onSchoolRefetch, refetchSchool]);
+
+    // ✅ Local delete handler INSIDE the component
+    const handleDeleteAdmin = async (adminId: number) => {
+        try {
+            console.log('Deleting admin with ID:', adminId);  // Debugging info
+            await deleteSchoolAdmin(adminId);
+            alert('Admin deleted successfully!');
+            refetch();  // 🚀 auto-refresh the admin list
+        } catch (error) {
+            console.error('Failed to delete admin:', error);
+            alert('Failed to delete admin.');
+        }
+    };
 
     // ✅ Hide if not visible
     if (!isVisible || !school) return null;
@@ -54,10 +94,10 @@ const ManageSchoolModal: React.FC<ManageSchoolModalProps> = ({
             {/* School Info */}
             <View style={styles.section}>
                 <Text style={styles.sectionTitle}>🏫 School Info:</Text>
-                <Text>- Name: {school.name}</Text>
-                <Text>- Address: {school.address}</Text>
-                <Text>- City: {school.city}</Text>
-                <Text>- Country: {school.country}</Text>
+                <Text>- Name: {schoolDetails?.name ?? school.name}</Text>
+                <Text>- Address: {schoolDetails?.address ?? school.address}</Text>
+                <Text>- City: {schoolDetails?.city ?? school.city}</Text>
+                <Text>- Country: {schoolDetails?.country ?? school.country}</Text>
             </View>
 
             {/* School Admins */}
@@ -74,11 +114,22 @@ const ManageSchoolModal: React.FC<ManageSchoolModalProps> = ({
                         data={admins}
                         keyExtractor={(item) => item.id.toString()}
                         renderItem={({ item }) => (
-                            <Text>
-                                - {item.firstName} {item.lastName} ({item.email})
-                            </Text>
+                            <View style={styles.adminRow}>
+                                <Text>
+                                    {item.firstName} {item.lastName} ({item.email})
+                                </Text>
+                                <View style={styles.adminActions}>
+                                    <TouchableOpacity onPress={() => onEditAdmin(item)}>
+                                        <Text style={styles.editText}>✏️ Edit</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity onPress={() => handleDeleteAdmin(item.id)}>
+                                        <Text style={styles.deleteText}>🗑️ Delete</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
                         )}
                     />
+
                 )}
             </View>
 
@@ -143,6 +194,25 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontWeight: 'bold',
     },
+    adminRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 8,
+    },
+    adminActions: {
+        flexDirection: 'row',
+        gap: 12,
+    },
+    editText: {
+        color: '#15808D',
+        fontWeight: 'bold',
+    },
+    deleteText: {
+        color: '#F15A22',
+        fontWeight: 'bold',
+    },
+
 });
 
 export default ManageSchoolModal;

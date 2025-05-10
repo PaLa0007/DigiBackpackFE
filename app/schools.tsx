@@ -7,6 +7,7 @@ import { useAuth } from '../src/store/auth';
 
 import AddSchoolAdminModal from './addSchoolAdminModal';
 import AddSchoolModal from './addSchoolModal';
+import EditSchoolAdminModal from './editSchoolAdminModal';
 import EditSchoolModal from './editSchoolModal';
 import ManageSchoolModal from './manageSchoolModal';
 
@@ -32,7 +33,10 @@ export default function Schools() {
     const [showManageModal, setShowManageModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [showAddAdminModal, setShowAddAdminModal] = useState(false);
-
+    const [editingAdmin, setEditingAdmin] = useState<any>(null);
+    const [showEditAdminModal, setShowEditAdminModal] = useState(false);
+    const [refetchAdmins, setRefetchAdmins] = useState<(() => void) | null>(null);
+    const [refetchSchoolDetails, setRefetchSchoolDetails] = useState<(() => void) | null>(null);
 
     const { data, isLoading, error } = useQuery<School[]>({
         queryKey: ['schools'],
@@ -219,7 +223,6 @@ export default function Schools() {
                         isVisible={showManageModal}
                         onClose={() => setShowManageModal(false)}
                         onEdit={() => {
-                            setShowManageModal(false);
                             setShowEditModal(true);
                         }}
                         onRegisterAdmin={() => {
@@ -237,6 +240,16 @@ export default function Schools() {
                                 alert('Failed to delete school.');
                             }
                         }}
+                        onEditAdmin={(admin) => {
+                            setEditingAdmin(admin);
+                            setShowEditAdminModal(true);
+                        }}
+                        onAdminsRefetch={(refetchFn) => {
+                            setRefetchAdmins(() => refetchFn);  // store refetch fn in state
+                        }}
+                        onSchoolRefetch={(refetchFn) => {
+                            setRefetchSchoolDetails(() => refetchFn);  // Store refetch for later
+                        }}
                     />
                 )}
 
@@ -248,7 +261,7 @@ export default function Schools() {
                             onClose={() => setShowEditModal(false)}
                             onSave={() => {
                                 setShowEditModal(false);
-                                router.replace('/schools'); // refresh
+                                refetchSchoolDetails?.();  // ✅ Refresh the data
                             }}
                         />
 
@@ -258,10 +271,26 @@ export default function Schools() {
                             onClose={() => setShowAddAdminModal(false)}
                             onSave={() => {
                                 setShowAddAdminModal(false);
-                                // optionally refetch admins if needed
+                                if (refetchAdmins) {
+                                    refetchAdmins();  // refresh admins after adding
+                                }
                             }}
                         />
                     </>
+                )}
+
+                {editingAdmin && (
+                    <EditSchoolAdminModal
+                        admin={editingAdmin}
+                        isVisible={showEditAdminModal}
+                        onClose={() => setShowEditAdminModal(false)}
+                        onSave={() => {
+                            setShowEditAdminModal(false);
+                            if (refetchAdmins) {
+                                refetchAdmins();  // refresh admins after adding
+                            }
+                        }}
+                    />
                 )}
             </View>
         </View>

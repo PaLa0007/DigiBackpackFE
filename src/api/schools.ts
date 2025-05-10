@@ -10,7 +10,7 @@ export const fetchSchools = async () => {
 };
 
 export const fetchSchoolById = async (id: number) => {
-  const response = await fetch(`http://your-backend-url/api/schools/${id}`);
+  const response = await fetch(`http://localhost:8165/api/schools/${id}`);
   return response.json();
 };
 
@@ -41,19 +41,5 @@ export const deleteSchool = async (id: number) => {
   });
 };
 
-export const registerSchoolAdmin = async (schoolId: number, adminData: any) => {
-  const response = await fetch(`http://localhost:8165/api/users/register-admin/${schoolId}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(adminData),
-  });
 
-  if (!response.ok) {
-    throw new Error('Failed to register school admin');
-  }
-
-  return response.json();
-};
 

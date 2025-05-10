@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Button, Modal, StyleSheet, Text, TextInput, View } from 'react-native';
-import { registerSchoolAdmin } from '../src/api/schools';
+import { registerSchoolAdmin } from '../src/api/users';
+
 
 type AddSchoolAdminModalProps = {
     schoolId: number;
