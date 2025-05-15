@@ -27,7 +27,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
             case 'SCHOOL_ADMIN':
                 return [
                     { label: 'Dashboard', icon: '🏠', path: '/home-schooladmin' },
-                    { label: 'Teachers', icon: '👨‍🏫', path: '/teachers' },
+                    { label: 'Teachers', icon: '👨‍🏫', path: '/Teachers/teachers' },
                     { label: 'Students', icon: '🎓', path: '/students' },
                 ];
             default:

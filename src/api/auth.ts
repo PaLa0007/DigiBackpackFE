@@ -1,14 +1,13 @@
-import axios from 'axios';
-
-const api = axios.create({
-  baseURL: 'http://192.168.31.100:8165/api/users',
-});
+import api from './api'; // shared axios instance
 
 export const login = async (username: string, password: string) => {
-  const response = await api.post('/login', null, {
-    params: { username, password },
-    withCredentials: true, // to allow session cookie if needed
-  });
+  const response = await api.post(
+    '/users/login',
+    null,
+    {
+      params: { username, password },
+      withCredentials: true,
+    }
+  );
   return response.data;
 };
-

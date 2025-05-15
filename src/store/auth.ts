@@ -7,7 +7,13 @@ type User = {
   firstName: string;
   lastName: string;
   role: string;
+
+  schoolId?: number; 
+  school?: {
+    id: number;
+  };
 };
+
 
 type AuthState = {
   user: User | null;

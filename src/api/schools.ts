@@ -1,45 +1,33 @@
-import axios from 'axios';
+import api from './api'; // shared axios instance
 
-const api = axios.create({
-  baseURL: 'http://192.168.31.100:8165/api/schools',
-});
-
-export const fetchSchools = async () => {
-  const response = await api.get('');
-  return response.data;
-};
-
-export const fetchSchoolById = async (id: number) => {
-  const response = await fetch(`http://localhost:8165/api/schools/${id}`);
-  return response.json();
-};
-
-export const addSchool = async (school: {
+export type School = {
+  id: number;
   name: string;
   address: string;
   city: string;
   country: string;
-}) => {
-  const response = await axios.post('http://localhost:8165/api/schools', school);
+};
+
+export const fetchSchools = async (): Promise<School[]> => {
+  const response = await api.get<School[]>('/schools');
   return response.data;
 };
 
-export const updateSchool = async (id: number, schoolData: any) => {
-  const response = await fetch(`http://localhost:8165/api/schools/${id}`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(schoolData),
-  });
-  return response.json();
+export const fetchSchoolById = async (id: number): Promise<School> => {
+  const response = await api.get<School>(`/schools/${id}`);
+  return response.data;
 };
 
-export const deleteSchool = async (id: number) => {
-  await fetch(`http://localhost:8165/api/schools/${id}`, {
-    method: 'DELETE',
-  });
+export const addSchool = async (school: Omit<School, 'id'>): Promise<School> => {
+  const response = await api.post('/schools', school);
+  return response.data;
 };
 
+export const updateSchool = async (id: number, schoolData: Partial<School>): Promise<School> => {
+  const response = await api.put(`/schools/${id}`, schoolData);
+  return response.data;
+};
 
-
+export const deleteSchool = async (id: number): Promise<void> => {
+  await api.delete(`/schools/${id}`);
+};
