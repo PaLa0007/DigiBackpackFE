@@ -62,3 +62,14 @@ export const updateTeacher = async (id: number, payload: UpdateTeacherPayload) =
 export const deleteTeacher = async (id: number) => {
     await api.delete(`/teachers/${id}`);
 };
+
+export type TeacherDashboardStats = {
+    classroomCount: number;
+    assignmentCount: number;
+    materialCount: number;
+};
+
+export const fetchTeacherDashboardStats = async (teacherId: number): Promise<TeacherDashboardStats> => {
+    const response = await api.get<TeacherDashboardStats>(`/teachers/${teacherId}/dashboard-stats`);
+    return response.data;
+};

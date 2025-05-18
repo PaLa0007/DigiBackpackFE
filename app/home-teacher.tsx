@@ -1,6 +1,9 @@
+import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { fetchTeacherDashboardStats } from '../src/api/teachers';
 import { useAuth } from '../src/store/auth';
+import DashboardCard from './Shared/DashboardCard';
 import Sidebar from './Shared/Sidebar';
 
 export default function HomeTeacher() {
@@ -8,7 +11,13 @@ export default function HomeTeacher() {
   const clearUser = useAuth((state) => state.clearUser);
   const router = useRouter();
 
-  if (!user) {
+  const { data: stats, isLoading: loadingStats } = useQuery({
+    queryKey: ['teacher-dashboard-stats', user?.id],
+    queryFn: () => fetchTeacherDashboardStats(user?.id ?? 0),
+    enabled: !!user?.id,
+  });
+
+  if (!user || loadingStats || !stats) {
     return (
       <View style={styles.centered}>
         <ActivityIndicator size="large" color="#F69521" />
@@ -27,8 +36,12 @@ export default function HomeTeacher() {
 
       <View style={styles.mainContent}>
         <Text style={styles.header}>Welcome, {user.firstName} {user.lastName}!</Text>
-        <Text style={styles.subtext}>This is the Teacher Dashboard.</Text>
-        {/* Add dashboard content for teachers here */}
+
+        <View style={styles.cardContainer}>
+          <DashboardCard title="Classes Taught" count={stats.classroomCount} />
+          <DashboardCard title="Assignments Created" count={stats.assignmentCount} />
+          <DashboardCard title="Materials Uploaded" count={stats.materialCount} />
+        </View>
       </View>
     </View>
   );
@@ -51,10 +64,10 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#124E57',
   },
-  subtext: {
-    fontSize: 16,
-    textAlign: 'center',
-    color: '#15808D',
+  cardContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
   },
   centered: {
     flex: 1,
