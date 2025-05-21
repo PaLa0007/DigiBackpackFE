@@ -17,7 +17,10 @@ const EditClassroomModal: React.FC<Props> = ({ isVisible, onClose, onSubmit, ini
   }, [initialData]);
 
   const handleChange = (field: keyof ClassroomPayload, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: field === 'grade' ? Number(value) : value }));
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
   };
 
   return (
@@ -32,10 +35,12 @@ const EditClassroomModal: React.FC<Props> = ({ isVisible, onClose, onSubmit, ini
             style={styles.input}
           />
           <TextInput
-            placeholder="Grade"
-            value={formData.grade.toString()}
-            onChangeText={(text) => handleChange('grade', text)}
-            keyboardType="numeric"
+          
+            value={formData.grade}
+            onChangeText={(text) =>
+              handleChange('grade', text.toUpperCase())
+            }
+            placeholder="Grade - e.g., 4A"
             style={styles.input}
           />
 

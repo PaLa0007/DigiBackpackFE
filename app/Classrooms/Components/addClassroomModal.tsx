@@ -9,14 +9,16 @@ interface Props {
 }
 
 const AddClassroomModal: React.FC<Props> = ({ isVisible, onClose, onSubmit }) => {
-  const [formData, setFormData] = useState<ClassroomPayload>({ name: '', grade: 1 });
+
+  const [formData, setFormData] = useState<ClassroomPayload>({ name: '', grade: '' });
 
   const handleChange = (field: keyof ClassroomPayload, value: string) => {
     setFormData((prev) => ({
       ...prev,
-      [field]: field === 'grade' ? Number(value) : value,
+      [field]: field === 'grade' ? value.toUpperCase() : value,
     }));
   };
+
 
   return (
     <Modal visible={isVisible} transparent animationType="slide">
@@ -32,10 +34,11 @@ const AddClassroomModal: React.FC<Props> = ({ isVisible, onClose, onSubmit }) =>
           />
 
           <TextInput
-            placeholder="Grade"
-            value={formData.grade.toString()}
-            onChangeText={(text) => handleChange('grade', text)}
-            keyboardType="numeric"
+            value={formData.grade}
+            onChangeText={(text) =>
+              handleChange('grade', text.toUpperCase())
+            }
+            placeholder="Grade - e.g., 4A"
             style={styles.input}
           />
 

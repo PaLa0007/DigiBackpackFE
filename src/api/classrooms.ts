@@ -16,7 +16,7 @@ export type Classroom = {
 
 export type ClassroomPayload = {
   name: string;
-  grade: number;
+  grade: string;
   teacherId?: number;
 };
 

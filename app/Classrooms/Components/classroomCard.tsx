@@ -18,7 +18,7 @@ const ClassroomCard: React.FC<Props> = ({ classroom, onEdit, onDelete }) => {
         style={{ flex: 1 }}
         onPress={() =>
           router.push({
-            pathname: '/Teacher/classrooms/[id]',
+            pathname: '/Classrooms/[id]',
             params: { id: classroom.id.toString() },
           })
         }

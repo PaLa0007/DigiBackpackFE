@@ -1,7 +1,14 @@
 import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
-import { Button, Platform, Text, TextInput, View } from 'react-native';
+import React, { useState } from 'react';
+import {
+  Platform,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { login } from '../src/api/auth';
 import { useAuth } from '../src/store/auth';
 
@@ -16,92 +23,151 @@ export default function LoginScreen() {
     mutationFn: () => login(username, password),
     onSuccess: (data: any) => {
       setErrorMessage('');
-      setUser(data); // ✅ store user info in Zustand
+      setUser(data);
 
-      // ✅ route based on user role
-      if (data.role === 'SYSTEM_ADMIN') {
-        router.replace('/home-sysadmin');
-      } else if (data.role === 'SCHOOL_ADMIN') {
-        router.replace('/home-schooladmin');
-      } else if (data.role === 'TEACHER') {
-        router.replace('/home-teacher');
-      } else if (data.role === 'STUDENT') {
-        router.replace('/home-student');
-      } else {
-        router.replace('/'); // fallback
+      switch (data.role) {
+        case 'SYSTEM_ADMIN':
+          router.replace('/home-sysadmin');
+          break;
+        case 'SCHOOL_ADMIN':
+          router.replace('/home-schooladmin');
+          break;
+        case 'TEACHER':
+          router.replace('/home-teacher');
+          break;
+        case 'STUDENT':
+          router.replace('/home-student');
+          break;
+        default:
+          router.replace('/');
       }
     },
     onError: (error: any) => {
-      const backendMessage = error.response?.data || 'An error occurred';
+      const backendMessage = error.response?.data || 'Login failed.';
       setErrorMessage(backendMessage);
     },
   });
 
-  return (
-    <View style={{ flex: 1, justifyContent: 'center', padding: 16 }}>
-      <Text style={{ fontSize: 24, marginBottom: 16, textAlign: 'center' }}>Login</Text>
+  const isPending = mutation.status === 'pending';
 
-      {Platform.OS === 'web' ? (
-        <form
-          onSubmit={(e) => {
-            e.preventDefault(); // prevent page reload
-            mutation.mutate();
-          }}
-        >
-          <TextInput
-            placeholder="Username"
-            value={username}
-            onChangeText={setUsername}
-            autoCapitalize="none"
-            style={{ borderWidth: 1, marginBottom: 12, padding: 8 }}
-          />
-          <TextInput
-            placeholder="Password"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            style={{ borderWidth: 1, marginBottom: 12, padding: 8 }}
-          />
-          <button
-            type="submit"
-            disabled={mutation.status === 'pending'}
-            style={{
-              padding: 10,
-              backgroundColor: '#007bff',
-              color: 'white',
-              border: 'none',
-              borderRadius: 4,
-              marginTop: 10,
-              cursor: 'pointer',
-              width: '100%',
+  const renderLoginForm = () => (
+    <View style={styles.form}>
+      <TextInput
+        style={styles.input}
+        placeholder="Username"
+        value={username}
+        onChangeText={setUsername}
+        autoCapitalize="none"
+        placeholderTextColor="#888"
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Password"
+        value={password}
+        onChangeText={setPassword}
+        secureTextEntry
+        placeholderTextColor="#888"
+      />
+      {errorMessage ? <Text style={styles.error}>{errorMessage}</Text> : null}
+
+      <TouchableOpacity
+        style={[styles.button, isPending && styles.buttonDisabled]}
+        onPress={() => mutation.mutate()}
+        disabled={isPending}
+      >
+        <Text style={styles.buttonText}>
+          {isPending ? 'Logging in...' : 'Login'}
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.card}>
+        <Text style={styles.title}>DigiBackpack</Text>
+        {Platform.OS === 'web' ? (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              mutation.mutate();
             }}
+            style={{ width: '100%' }}
           >
-            {mutation.status === 'pending' ? 'Logging in...' : 'Login'}
-          </button>
-        </form>
-      ) : (
-        <>
-          <TextInput
-            placeholder="Username"
-            value={username}
-            onChangeText={setUsername}
-            autoCapitalize="none"
-            style={{ borderWidth: 1, marginBottom: 12, padding: 8 }}
-          />
-          <TextInput
-            placeholder="Password"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            style={{ borderWidth: 1, marginBottom: 12, padding: 8 }}
-          />
-          <Button
-            title={mutation.status === 'pending' ? 'Logging in...' : 'Login'}
-            onPress={() => mutation.mutate()}
-            disabled={mutation.status === 'pending'}
-          />
-        </>
-      )}
+            {renderLoginForm()}
+          </form>
+        ) : (
+          renderLoginForm()
+        )}
+      </View>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#124E57',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+  },
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 24,
+    width: '100%',
+    maxWidth: 400,
+    elevation: 4,
+  },
+  title: {
+    fontSize: 26,
+    fontWeight: 'bold',
+    color: '#124E57',
+    marginBottom: 24,
+    textAlign: 'center',
+  },
+  form: {
+    alignItems: 'center',
+    width: '100%',
+  },
+
+  input: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    fontSize: 16,
+    marginBottom: 16,
+    color: '#000',
+    backgroundColor: '#FFF',
+    width: '100%',
+    maxWidth: 300, // Keeps it centered and not too wide
+  },
+  button: {
+    backgroundColor: '#F15A22',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: 'center',
+    width: 300, // Aligns with maxWidth of input
+  },
+
+  buttonDisabled: {
+    opacity: 0.6,
+  },
+
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+
+  error: {
+    color: '#F15A22',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+});
