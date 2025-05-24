@@ -4,6 +4,7 @@ import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { fetchStudents } from '../src/api/students';
 import { fetchTeachers } from '../src/api/teachers';
 import { useAuth } from '../src/store/auth';
+import { useLogout } from './../src/hooks/useLogout';
 import DashboardCard from './Shared/DashboardCard'; // adjust path as needed
 import Sidebar from './Shared/Sidebar';
 
@@ -19,7 +20,7 @@ export default function HomeSchoolAdmin() {
         queryFn: fetchStudents,
     });
 
-    const clearUser = useAuth((state) => state.clearUser);
+    const logout = useLogout();
     const user = useAuth((state) => state.user);
     const router = useRouter();
 
@@ -36,12 +37,7 @@ export default function HomeSchoolAdmin() {
 
     return (
         <View style={styles.container}>
-            <Sidebar
-                onLogout={() => {
-                    clearUser();
-                    router.replace('/login');
-                }}
-            />
+            <Sidebar onLogout={logout} />
 
             <View style={styles.mainContent}>
                 <Text style={styles.header}>

@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { ActivityIndicator, Button, FlatList, StyleSheet, Text, View } from 'react-native';
 import { fetchStudents, Student } from '../../src/api/students';
+import { useLogout } from '../../src/hooks/useLogout';
 import { useAuth } from '../../src/store/auth';
 import Sidebar from '../Shared/Sidebar';
 import AddStudentModal from './Components/addStudentModal';
@@ -26,15 +27,15 @@ export default function Students() {
     queryFn: fetchStudents,
   });
 
-  const clearUser = useAuth((state) => state.clearUser);
+  const logout = useLogout();
   const user = useAuth((state) => state.user);
   const router = useRouter();
 
   const filteredStudents = data
     ? data.filter((s) => `${s.firstName} ${s.lastName}`.toLowerCase().includes(searchQuery.toLowerCase()))
-        .sort((a, b) => sortOption === 'name_asc'
-          ? a.firstName.localeCompare(b.firstName)
-          : b.firstName.localeCompare(a.firstName))
+      .sort((a, b) => sortOption === 'name_asc'
+        ? a.firstName.localeCompare(b.firstName)
+        : b.firstName.localeCompare(a.firstName))
     : [];
 
   const totalPages = Math.ceil(filteredStudents.length / PAGE_SIZE);
@@ -53,12 +54,7 @@ export default function Students() {
 
   return (
     <View style={styles.container}>
-      <Sidebar
-        onLogout={() => {
-          clearUser();
-          router.replace('/login');
-        }}
-      />
+      <Sidebar onLogout={logout} />
 
       <View style={styles.mainContent}>
         <View style={styles.headerRow}>

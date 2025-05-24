@@ -3,8 +3,7 @@ import { usePathname, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Button, FlatList, StyleSheet, Text, View, } from 'react-native';
 import { addSchool, deleteSchool, fetchSchools } from '../../src/api/schools';
-import { useAuth } from '../../src/store/auth';
-
+import { useLogout } from '../../src/hooks/useLogout';
 
 import AddSchoolAdminModal from './Components/addSchoolAdminModal';
 import AddSchoolModal from './Components/addSchoolModal';
@@ -12,8 +11,6 @@ import EditSchoolAdminModal from './Components/editSchoolAdminModal';
 import EditSchoolModal from './Components/editSchoolModal';
 import ManageSchoolModal from './Components/manageSchoolModal';
 
-
-//import SidebarItem from '../Shared/sidebarItem';
 import Sidebar from '../Shared/Sidebar';
 import SchoolCard from './Components/schoolCard';
 import SchoolControls from './Components/schoolControls';
@@ -47,7 +44,7 @@ export default function Schools() {
         queryFn: fetchSchools,
     });
 
-    const clearUser = useAuth((state) => state.clearUser);
+    const logout = useLogout();
     const router = useRouter();
     const pathname = usePathname();
 
@@ -106,12 +103,7 @@ export default function Schools() {
     return (
         <View style={styles.container}>
             {/* Sidebar */}
-            <Sidebar
-                onLogout={() => {
-                    clearUser();
-                    router.replace('/login');
-                }}
-            />
+            <Sidebar onLogout={logout} />
 
             {/* Main Content */}
             <View style={styles.mainContent}>

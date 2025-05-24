@@ -3,6 +3,7 @@ import { usePathname, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { ActivityIndicator, Button, FlatList, StyleSheet, Text, View } from 'react-native';
 import { fetchTeachers, Teacher } from '../../src/api/teachers';
+import { useLogout } from '../../src/hooks/useLogout';
 import { useAuth } from '../../src/store/auth';
 import Sidebar from '../Shared/Sidebar';
 import AddTeacherModal from './Components/addTeacherModal';
@@ -27,7 +28,7 @@ export default function Teachers() {
         queryFn: fetchTeachers,
     });
 
-    const clearUser = useAuth((state) => state.clearUser);
+    const logout = useLogout();
     const user = useAuth((state) => state.user);
     const router = useRouter();
     const pathname = usePathname();
@@ -69,12 +70,7 @@ export default function Teachers() {
     return (
         <View style={styles.container}>
             {/* Sidebar */}
-            <Sidebar
-                onLogout={() => {
-                    clearUser();
-                    router.replace('/login');
-                }}
-            />
+            <Sidebar onLogout={logout} />
 
             {/* Main Content */}
             <View style={styles.mainContent}>

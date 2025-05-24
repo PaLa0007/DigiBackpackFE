@@ -17,6 +17,7 @@ import {
     fetchTeacherClassrooms,
     updateClassroom,
 } from '../../src/api/classrooms';
+import { useLogout } from '../../src/hooks/useLogout';
 import { useAuth } from '../../src/store/auth';
 import Sidebar from '../Shared/Sidebar';
 import AddClassroomModal from './Components/addClassroomModal';
@@ -25,7 +26,7 @@ import EditClassroomModal from './Components/editClassroomModal';
 
 export default function TeacherClassrooms() {
     const user = useAuth((state) => state.user);
-    const clearUser = useAuth((state) => state.clearUser);
+    const logout = useLogout();
     const router = useRouter();
     const queryClient = useQueryClient();
 
@@ -73,7 +74,7 @@ export default function TeacherClassrooms() {
     if (isLoading) {
         return (
             <View style={styles.wrapper}>
-                <Sidebar onLogout={clearUser} />
+                <Sidebar onLogout={logout} />
                 <View style={styles.centered}>
                     <ActivityIndicator size="large" color="#F69521" />
                 </View>
@@ -84,7 +85,7 @@ export default function TeacherClassrooms() {
     if (error) {
         return (
             <View style={styles.wrapper}>
-                <Sidebar onLogout={clearUser} />
+                <Sidebar onLogout={logout} />
                 <View style={styles.centered}>
                     <Text style={styles.error}>Failed to load classrooms.</Text>
                 </View>
@@ -94,7 +95,7 @@ export default function TeacherClassrooms() {
 
     return (
         <View style={styles.wrapper}>
-            <Sidebar onLogout={clearUser} />
+            <Sidebar onLogout={logout} />
             <View style={styles.mainContent}>
                 <Text style={styles.title}>Your Classes</Text>
 

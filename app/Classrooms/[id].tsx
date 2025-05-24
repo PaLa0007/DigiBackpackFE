@@ -1,20 +1,18 @@
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { useLocalSearchParams } from 'expo-router';
-import {
-  ActivityIndicator,
-  FlatList,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import React, { useState } from 'react';
+import { ActivityIndicator, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { FeedItem, fetchClassroomFeed } from '../../src/api/classrooms';
+import { useLogout } from '../../src/hooks/useLogout';
 import { useAuth } from '../../src/store/auth';
 import Sidebar from '../Shared/Sidebar';
 
 export default function ClassroomFeed() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const clearUser = useAuth((state) => state.clearUser);
+  const logout = useLogout();
+  const user = useAuth((state) => state.user);
+  const [activeTab, setActiveTab] = useState<'assignment' | 'material'>('assignment');
 
   const { data: feedItems, isLoading, error } = useQuery({
     queryKey: ['classroom-feed', id],
@@ -25,7 +23,7 @@ export default function ClassroomFeed() {
   if (isLoading) {
     return (
       <View style={styles.wrapper}>
-        <Sidebar onLogout={clearUser} />
+        <Sidebar onLogout={logout} />
         <View style={styles.centered}>
           <ActivityIndicator size="large" color="#F69521" />
         </View>
@@ -36,7 +34,7 @@ export default function ClassroomFeed() {
   if (error) {
     return (
       <View style={styles.wrapper}>
-        <Sidebar onLogout={clearUser} />
+        <Sidebar onLogout={logout} />
         <View style={styles.centered}>
           <Text style={styles.error}>Failed to load feed.</Text>
         </View>
@@ -44,14 +42,37 @@ export default function ClassroomFeed() {
     );
   }
 
+  const filteredItems =
+    user?.role === 'STUDENT'
+      ? feedItems?.filter((item) => item.type === activeTab)
+      : feedItems;
+
   return (
     <View style={styles.wrapper}>
-      <Sidebar onLogout={clearUser} />
+      <Sidebar onLogout={logout} />
       <View style={styles.mainContent}>
         <Text style={styles.title}>Classroom Feed</Text>
 
+        {user?.role === 'STUDENT' && (
+          <View style={styles.tabBar}>
+            <TouchableOpacity
+              style={[styles.tabButton, activeTab === 'assignment' && styles.activeTab]}
+              onPress={() => setActiveTab('assignment')}
+            >
+              <Text style={styles.tabText}>Assignments</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.tabButton, activeTab === 'material' && styles.activeTab]}
+              onPress={() => setActiveTab('material')}
+            >
+              <Text style={styles.tabText}>Materials</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         <FlatList
-          data={feedItems}
+          data={filteredItems}
           keyExtractor={(_, index) => index.toString()}
           renderItem={({ item }: { item: FeedItem }) => (
             <View style={styles.feedItem}>
@@ -69,6 +90,7 @@ export default function ClassroomFeed() {
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   wrapper: {
@@ -127,4 +149,25 @@ const styles = StyleSheet.create({
     color: '#F15A22',
     fontSize: 16,
   },
+
+  tabBar: {
+  flexDirection: 'row',
+  marginBottom: 16,
+},
+tabButton: {
+  flex: 1,
+  paddingVertical: 10,
+  backgroundColor: '#E0E0E0',
+  alignItems: 'center',
+  borderRadius: 6,
+  marginRight: 8,
+},
+activeTab: {
+  backgroundColor: '#F15A22',
+},
+tabText: {
+  color: '#124E57',
+  fontWeight: 'bold',
+},
+
 });

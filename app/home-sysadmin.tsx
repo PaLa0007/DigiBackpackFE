@@ -3,6 +3,7 @@ import { usePathname, useRouter } from 'expo-router';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { fetchSchools } from '../src/api/schools';
 import { useAuth } from '../src/store/auth';
+import { useLogout } from './../src/hooks/useLogout';
 
 import DashboardCard from './Shared/DashboardCard';
 import Sidebar from './Shared/Sidebar';
@@ -17,7 +18,7 @@ export default function HomeSysAdmin() {
     queryFn: fetchSchools,
   });
 
-  const clearUser = useAuth((state) => state.clearUser);
+  const logout = useLogout();
   const user = useAuth((state) => state.user);
   const router = useRouter();
 
@@ -45,12 +46,7 @@ export default function HomeSysAdmin() {
   return (
     <View style={styles.container}>
       {/* Sidebar */}
-      <Sidebar
-        onLogout={() => {
-          clearUser();
-          router.replace('/login');
-        }}
-      />
+      <Sidebar onLogout={logout} />
 
 
 
