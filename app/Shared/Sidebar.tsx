@@ -35,13 +35,14 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
                     { label: 'Dashboard', icon: '🏠', path: '/home-teacher' },
                     { label: 'Classrooms', icon: '📘', path: '/Classrooms/classrooms' },
                     { label: 'Materials', icon: '📚', path: '/teacher-materials' }, // optional/future
-                    { label: 'Assignments', icon: '📝', path: '/teacher-assignments' }, // optional/future
+                    { label: 'Assignments', icon: '📝', path: '/Assignments/assignments' }, // optional/future
                 ];
             case 'STUDENT':
                 return [
                     { label: 'Dashboard', icon: '🏠', path: '/home-student' },
                     { label: 'My Classes', icon: '📘', path: '/student-classes' }, // optional/future
-                    { label: 'Materials', icon: '📚', path: '/student-materials' }, // optional/future
+                    { label: 'Materials', icon: '📚', path: '/student-materials' },
+                    { label: 'Assignments', icon: '📝', path: '/Assignments/assignments' }, // optional/future
                 ];
             default:
                 return [];
