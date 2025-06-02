@@ -1,17 +1,18 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { ActivityIndicator, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { AssignmentDto, deleteAssignment, fetchAssignmentById } from '../../src/api/assignments';
-import { FeedItem, fetchClassroomFeed } from '../../src/api/classrooms';
-import { useLogout } from '../../src/hooks/useLogout';
-import { useAuth } from '../../src/store/auth';
-import AddAssignmentModal from '../Assignments/Components/AddAssignmentModal';
-import EditAssignmentModal from '../Assignments/Components/EditAssignmentModal';
-import Sidebar from '../Shared/Sidebar';
+import { AssignmentDto, deleteAssignment, fetchAssignmentById } from '../../../src/api/assignments';
+import { FeedItem, fetchClassroomFeed } from '../../../src/api/classrooms';
+import { useLogout } from '../../../src/hooks/useLogout';
+import { useAuth } from '../../../src/store/auth';
+import AddAssignmentModal from '../../Assignments/Components/AddAssignmentModal';
+import EditAssignmentModal from '../../Assignments/Components/EditAssignmentModal';
+import Sidebar from '../../Shared/Sidebar';
 
 export default function ClassroomFeed() {
+  const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const logout = useLogout();
   const user = useAuth((state) => state.user);
@@ -20,6 +21,7 @@ export default function ClassroomFeed() {
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [selectedAssignment, setSelectedAssignment] = useState<AssignmentDto | null>(null);
   const queryClient = useQueryClient();
+
 
   const { data: feedItems, isLoading, error } = useQuery({
     queryKey: ['classroom-feed', id],
@@ -110,6 +112,24 @@ export default function ClassroomFeed() {
             />
           </>
         )}
+
+        {user?.role === 'TEACHER' && (
+          <TouchableOpacity
+            style={styles.studentPreviewCard}
+            onPress={() =>
+              router.push({
+                pathname: '/Classrooms/[id]/students',
+                params: { id: String(id) },
+              })
+            }
+          >
+            <Text style={styles.studentPreviewTitle}>Manage Students</Text>
+            <Text style={styles.studentPreviewText}>
+              Tap to view, add, or remove students in this classroom.
+            </Text>
+          </TouchableOpacity>
+        )}
+
 
         <FlatList
           data={filteredItems}
@@ -309,6 +329,25 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
+  studentPreviewCard: {
+    backgroundColor: '#E8F5F7',
+    padding: 16,
+    borderRadius: 8,
+    marginBottom: 16,
+    borderLeftWidth: 4,
+    borderLeftColor: '#15808D',
+  },
+  studentPreviewTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#124E57',
+  },
+  studentPreviewText: {
+    fontSize: 14,
+    color: '#555',
+    marginTop: 4,
+  },
+
 });
 
 

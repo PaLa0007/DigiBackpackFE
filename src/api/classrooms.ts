@@ -28,6 +28,12 @@ export const fetchTeacherClassrooms = async (teacherId: number): Promise<Classro
     return response.data;
 };
 
+// Fetch single classroom by ID
+export const fetchClassroomById = async (id: number): Promise<Classroom> => {
+    const response = await api.get<Classroom>(`/classrooms/${id}`);
+    return response.data;
+};
+
 //Create new classroom
 export const createClassroom = async (payload: ClassroomPayload): Promise<Classroom> => {
     const response = await api.post<Classroom>('/classrooms', payload);
@@ -65,6 +71,6 @@ export const fetchClassroomFeed = async (classroomId: number): Promise<FeedItem[
         description: item.description,
         createdAt: item.createdAt,
         createdBy: item.createdBy,
-        id: item.id, 
+        id: item.id,
     }));
 };
