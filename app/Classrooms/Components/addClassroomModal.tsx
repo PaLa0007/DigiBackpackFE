@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
+import { Picker } from '@react-native-picker/picker';
+import React, { useEffect, useState } from 'react';
 import { Button, Modal, StyleSheet, Text, TextInput, View } from 'react-native';
 import { ClassroomPayload } from '../../../src/api/classrooms';
+import { Subject, fetchSubjectsBySchool } from '../../../src/api/subjects';
+import { useAuth } from '../../../src/store/auth';
 
 interface Props {
   isVisible: boolean;
@@ -9,16 +12,29 @@ interface Props {
 }
 
 const AddClassroomModal: React.FC<Props> = ({ isVisible, onClose, onSubmit }) => {
+  const { user } = useAuth();
+  const [formData, setFormData] = useState<ClassroomPayload>({
+    name: '',
+    grade: '',
+    subjectId: 0,
+  });
 
-  const [formData, setFormData] = useState<ClassroomPayload>({ name: '', grade: '' });
+  const [subjects, setSubjects] = useState<Subject[]>([]);
 
-  const handleChange = (field: keyof ClassroomPayload, value: string) => {
+  useEffect(() => {
+    if (user?.schoolId) {
+      fetchSubjectsBySchool(user.schoolId).then(setSubjects);
+    }
+  }, [user]);
+
+  const handleChange = (field: keyof ClassroomPayload, value: string | number) => {
     setFormData((prev) => ({
       ...prev,
-      [field]: field === 'grade' ? value.toUpperCase() : value,
+      [field]: field === 'grade' && typeof value === 'string' ? value.toUpperCase() : value,
     }));
   };
 
+  const isValid = formData.name && formData.grade && formData.subjectId;
 
   return (
     <Modal visible={isVisible} transparent animationType="slide">
@@ -35,14 +51,24 @@ const AddClassroomModal: React.FC<Props> = ({ isVisible, onClose, onSubmit }) =>
 
           <TextInput
             value={formData.grade}
-            onChangeText={(text) =>
-              handleChange('grade', text.toUpperCase())
-            }
+            onChangeText={(text) => handleChange('grade', text)}
             placeholder="Grade - e.g., 4A"
             style={styles.input}
           />
 
-          <Button title="Save" onPress={() => onSubmit(formData)} color="#15808D" />
+          <Text style={styles.label}>Subject</Text>
+          <Picker
+            selectedValue={formData.subjectId}
+            onValueChange={(value) => handleChange('subjectId', Number(value))}
+          >
+            <Picker.Item label="Select a subject..." value={0} />
+            {subjects.map((s) => (
+              <Picker.Item key={s.id} label={s.name} value={s.id} />
+            ))}
+          </Picker>
+
+          <View style={{ height: 12 }} />
+          <Button title="Save" onPress={() => onSubmit(formData)} color="#15808D" disabled={!isValid} />
           <View style={{ height: 10 }} />
           <Button title="Cancel" onPress={onClose} color="#F15A22" />
         </View>
@@ -77,6 +103,11 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 8,
     marginBottom: 12,
+  },
+  label: {
+    marginBottom: 4,
+    fontWeight: '600',
+    color: '#333',
   },
 });
 

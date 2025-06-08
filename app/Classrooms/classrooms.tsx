@@ -135,7 +135,11 @@ export default function TeacherClassrooms() {
                             setEditData(null);
                         }}
                         onSubmit={handleEdit}
-                        initialData={{ name: editData.name, grade: String(editData.grade) }}
+                        initialData={{
+                            name: editData.name,
+                            grade: String(editData.grade),
+                            subjectId: editData.subject?.id || 0  // fallback to 0 if subject is undefined
+                        }}
                     />
                 )}
             </View>

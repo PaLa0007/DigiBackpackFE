@@ -18,9 +18,19 @@ export type ClassroomPayload = {
     name: string;
     grade: string;
     teacherId?: number;
+    subjectId: number;
 };
 
-//Fetch all classrooms for a teacher
+// Fetch all classrooms for a school
+export const fetchSchoolClassrooms = async (schoolId: number): Promise<Classroom[]> => {
+    const response = await api.get<Classroom[]>('/classrooms', {
+        params: { schoolId },
+    });
+    return response.data;
+};
+
+
+// Fetch all classrooms for a teacher
 export const fetchTeacherClassrooms = async (teacherId: number): Promise<Classroom[]> => {
     const response = await api.get<Classroom[]>('/classrooms', {
         params: { teacherId },
