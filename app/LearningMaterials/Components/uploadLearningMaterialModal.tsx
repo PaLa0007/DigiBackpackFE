@@ -5,14 +5,12 @@ import React, { useState } from 'react';
 import {
     ActivityIndicator,
     Button,
-    Modal,
-    StyleSheet,
+    Modal, Platform, StyleSheet,
     Text,
     TextInput,
     TouchableOpacity,
-    View,
+    View
 } from 'react-native';
-import { uploadLearningMaterial } from '../../../src/api/learningMaterials';
 
 interface Props {
     visible: boolean;
@@ -44,35 +42,71 @@ const UploadLearningMaterialModal: React.FC<Props> = ({
         }
     };
 
-    const handleUpload = async () => {
-        if (!file || !title || !selectedClassroomId) return;
+const handleUpload = async () => {
+    if (!file || !title || !selectedClassroomId) {
+        console.error("Missing required fields");
+        return;
+    }
 
-        setUploading(true);
+    setUploading(true);
+
+    try {
+        console.log('Preparing FormData:');
+        console.log('file:', file);
+        console.log('title:', title);
+        console.log('description:', description);
+        console.log('classroomId:', selectedClassroomId);
+        console.log('uploadedById:', uploadedById);
 
         const formData = new FormData();
-        formData.append('file', {
-            uri: file.uri,
-            name: file.name,
-            type: file.mimeType || 'application/octet-stream',
-        } as any);
+
+        if (Platform.OS === 'web') {
+            // Fetch the file as a Blob explicitly on web
+            const fileResponse = await fetch(file.uri);
+            const blob = await fileResponse.blob();
+            formData.append('file', blob, file.name);
+        } else {
+            // Use proper object on mobile
+            formData.append('file', {
+                uri: file.uri,
+                name: file.name,
+                type: file.mimeType || 'application/octet-stream',
+            } as any);
+        }
+
         formData.append('title', title);
         formData.append('description', description);
         formData.append('classroomId', selectedClassroomId.toString());
         formData.append('uploadedById', uploadedById.toString());
 
-        try {
-            await uploadLearningMaterial(formData);
-            setTitle('');
-            setDescription('');
-            setFile(null);
-            onUploadSuccess();
-            onClose();
-        } catch (error) {
-            console.error('Upload failed:', error);
-        } finally {
-            setUploading(false);
+        // Upload using fetch (reliable across web and devices)
+        const response = await fetch('http://192.168.31.100:8165/api/learning-materials/upload', {
+            method: 'POST',
+            body: formData,
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Upload failed:', errorText);
+            throw new Error('Upload failed: ' + response.status);
         }
-    };
+
+        const data = await response.json();
+        console.log('Upload successful:', data);
+
+        setTitle('');
+        setDescription('');
+        setFile(null);
+        onUploadSuccess();
+        onClose();
+
+    } catch (error) {
+        console.error('Upload error:', error);
+    } finally {
+        setUploading(false);
+    }
+};
+
 
     return (
         <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>

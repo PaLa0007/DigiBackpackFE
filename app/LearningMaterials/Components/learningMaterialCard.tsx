@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { Alert, Linking, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Linking, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { BASE_URL } from '../../../src/api/api';
 import { LearningMaterialDto, deleteLearningMaterial } from '../../../src/api/learningMaterials';
 
 interface Props {
@@ -10,23 +11,39 @@ interface Props {
 }
 
 const LearningMaterialCard: React.FC<Props> = ({ material, currentUserId, onDeleted }) => {
-  const handleDelete = () => {
-    Alert.alert('Delete Material', 'Are you sure you want to delete this file?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await deleteLearningMaterial(material.id);
-            onDeleted();
-          } catch (err) {
-            console.error('Failed to delete material:', err);
-          }
-        },
-      },
-    ]);
+  const handleDelete = async () => {
+    console.log('Delete icon pressed.');
+
+    const confirmDelete = async () => {
+      console.log('Confirmed delete.');
+      try {
+        await deleteLearningMaterial(material.id);
+        console.log('Delete API called.');
+        onDeleted();
+      } catch (err) {
+        console.error('Failed to delete material:', err);
+      }
+    };
+
+    if (Platform.OS === 'web') {
+      const confirm = window.confirm('Are you sure you want to delete this file?');
+      if (confirm) {
+        await confirmDelete();
+      }
+    } else {
+      Alert.alert(
+        'Delete Material',
+        'Are you sure you want to delete this file?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Delete', style: 'destructive', onPress: confirmDelete },
+        ]
+      );
+    }
   };
+
+
+
 
   return (
     <View style={styles.card}>
@@ -41,9 +58,18 @@ const LearningMaterialCard: React.FC<Props> = ({ material, currentUserId, onDele
 
       {material.description ? <Text style={styles.description}>{material.description}</Text> : null}
 
-      <TouchableOpacity onPress={() => Linking.openURL(material.fileUrl)}>
-        <Text style={styles.link}>{material.fileUrl.split('/').pop()}</Text>
+      <TouchableOpacity
+        style={styles.downloadButton}
+        onPress={() => {
+          const filename = material.fileUrl.split('/').pop();
+          const downloadUrl = `${BASE_URL}/learning-materials/download/${encodeURIComponent(filename ?? '')}`;
+
+          Linking.openURL(downloadUrl);
+        }}
+      >
+        <Text style={styles.downloadButtonText}>⬇️ Download</Text>
       </TouchableOpacity>
+
     </View>
   );
 };
@@ -77,6 +103,19 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     textDecorationLine: 'underline',
   },
+  downloadButton: {
+    marginTop: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: '#15808D',
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  downloadButtonText: {
+    color: '#fff',
+    fontWeight: '600',
+  },
+
 });
 
 export default LearningMaterialCard;
