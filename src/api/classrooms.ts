@@ -69,18 +69,19 @@ export type FeedItem = {
     createdAt: string;
     createdBy: string;
     id?: number; // ← will be the assignment ID when type === 'assignment'
+    fileUrl?: string;
 };
 
 //Fetch classroom feed
 export const fetchClassroomFeed = async (classroomId: number): Promise<FeedItem[]> => {
     const response = await api.get<FeedItem[]>(`/classrooms/${classroomId}/feed`);
     return response.data.map(item => ({
-        ...item,
+        id: item.id,
         type: item.type,
         title: item.title,
         description: item.description,
         createdAt: item.createdAt,
         createdBy: item.createdBy,
-        id: item.id,
+        fileUrl: item.fileUrl ?? undefined,
     }));
 };
