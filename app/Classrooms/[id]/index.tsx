@@ -163,7 +163,7 @@ export default function ClassroomFeed() {
           data={filteredItems}
           keyExtractor={(_, index) => index.toString()}
           renderItem={({ item }: { item: FeedItem }) => {
-            console.log('FEED ITEM', item); // ✅ Log for debugging
+            console.log('FEED ITEM', item); //  Log for debugging
 
             return (
               <View style={styles.feedItem}>
@@ -175,7 +175,7 @@ export default function ClassroomFeed() {
                   {format(new Date(item.createdAt), 'dd MMM yyyy, HH:mm')}
                 </Text>
 
-                {/* ✅ Assignment actions (teachers) */}
+                {/*  Assignment actions (teachers) */}
                 {user?.role === 'TEACHER' && item.type === 'assignment' && item.id && (
                   <View style={styles.actionsRow}>
                     <TouchableOpacity
@@ -194,7 +194,7 @@ export default function ClassroomFeed() {
                   </View>
                 )}
 
-                {/* ✅ Material actions (students and teachers) */}
+                {/*  Material actions (students and teachers) */}
                 {item.type === 'material' && item.fileUrl && (
                   <>
                     {/* Download button */}
@@ -237,42 +237,6 @@ export default function ClassroomFeed() {
 
         />
 
-
-        {/*<FlatList
-          data={filteredItems}
-          keyExtractor={(_, index) => index.toString()}
-          renderItem={({ item }: { item: FeedItem }) => (
-            <View style={styles.feedItem}>
-              <Text style={styles.feedType}>[{item.type.toUpperCase()}]</Text>
-              {item.title && <Text style={styles.feedTitle}>{item.title}</Text>}
-              <Text style={styles.feedDescription}>{item.description}</Text>
-              <Text style={styles.meta}>
-                Posted by {item.createdBy} on{' '}
-                {format(new Date(item.createdAt), 'dd MMM yyyy, HH:mm')}
-              </Text>
-
-              {user?.role === 'TEACHER' && item.type === 'assignment' && item.id && (
-                <View style={styles.actionsRow}>
-                  <TouchableOpacity
-                    style={styles.actionButton}
-                    onPress={() => openEditModal(item.id!)}
-                  >
-                    <Text style={styles.actionButtonText}>Edit</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={[styles.actionButton, { backgroundColor: '#D32F2F' }]}
-                    onPress={() => handleDelete(item.id!)}
-                  >
-                    <Text style={styles.actionButtonText}>Delete</Text>
-                  </TouchableOpacity>
-                </View>
-
-              )}
-            </View>
-          )}
-        />*/}
-
         {selectedAssignment && (
           <EditAssignmentModal
             visible={editModalVisible}
@@ -308,34 +272,39 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   feedItem: {
-    backgroundColor: '#F1F1F1',
+    backgroundColor: '#fff',
     padding: 16,
-    borderRadius: 8,
+    borderRadius: 12,
     marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
     shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
   },
   feedType: {
     fontSize: 12,
-    fontWeight: 'bold',
+    fontWeight: '600',
     color: '#F15A22',
+    marginBottom: 4,
   },
   feedTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#15808D',
+    color: '#124E57',
+    marginBottom: 4,
   },
   feedDescription: {
     fontSize: 14,
-    color: '#555',
-    marginTop: 4,
+    color: '#444',
+    marginBottom: 4,
   },
   meta: {
     fontSize: 12,
     color: '#777',
-    marginTop: 6,
+    marginBottom: 8,
   },
   centered: {
     flex: 1,
@@ -379,17 +348,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-
-  // ✅ ADD THESE
   actionsRow: {
     flexDirection: 'row',
+    justifyContent: 'flex-end',
     marginTop: 8,
     gap: 8,
   },
   actionButton: {
     backgroundColor: '#15808D',
     paddingVertical: 8,
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
     borderRadius: 8,
   },
   actionButtonText: {
@@ -415,11 +383,10 @@ const styles = StyleSheet.create({
     color: '#555',
     marginTop: 4,
   },
-
   downloadButton: {
     backgroundColor: '#15808D',
     paddingVertical: 8,
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
     borderRadius: 8,
     alignItems: 'center',
     marginTop: 8,
@@ -431,7 +398,7 @@ const styles = StyleSheet.create({
   deleteButton: {
     backgroundColor: '#D32F2F',
     paddingVertical: 8,
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
     borderRadius: 8,
     alignItems: 'center',
     marginTop: 8,

@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { Alert, Linking, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { BASE_URL } from '../../../src/api/api';
@@ -12,110 +11,101 @@ interface Props {
 
 const LearningMaterialCard: React.FC<Props> = ({ material, currentUserId, onDeleted }) => {
   const handleDelete = async () => {
-    console.log('Delete icon pressed.');
+    const confirm = Platform.OS === 'web'
+      ? window.confirm('Are you sure you want to delete this file?')
+      : await new Promise((resolve) => {
+        Alert.alert(
+          'Delete Material',
+          'Are you sure you want to delete this file?',
+          [
+            { text: 'Cancel', style: 'cancel', onPress: () => resolve(false) },
+            { text: 'Delete', style: 'destructive', onPress: () => resolve(true) },
+          ]
+        );
+      });
 
-    const confirmDelete = async () => {
-      console.log('Confirmed delete.');
+    if (confirm) {
       try {
         await deleteLearningMaterial(material.id);
-        console.log('Delete API called.');
         onDeleted();
       } catch (err) {
         console.error('Failed to delete material:', err);
       }
-    };
-
-    if (Platform.OS === 'web') {
-      const confirm = window.confirm('Are you sure you want to delete this file?');
-      if (confirm) {
-        await confirmDelete();
-      }
-    } else {
-      Alert.alert(
-        'Delete Material',
-        'Are you sure you want to delete this file?',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Delete', style: 'destructive', onPress: confirmDelete },
-        ]
-      );
     }
   };
 
-
-
-
   return (
     <View style={styles.card}>
-      <View style={styles.cardHeader}>
-        <Text style={styles.title}>{material.title}</Text>
-        {material.uploadedById === currentUserId && (
-          <TouchableOpacity onPress={handleDelete}>
-            <Ionicons name="trash" size={20} color="red" />
-          </TouchableOpacity>
-        )}
-      </View>
-
-      {material.description ? <Text style={styles.description}>{material.description}</Text> : null}
+      <Text style={styles.title}>{material.title}</Text>
+      {material.description ? (
+        <Text style={styles.description}>{material.description}</Text>
+      ) : null}
 
       <TouchableOpacity
         style={styles.downloadButton}
         onPress={() => {
           const filename = material.fileUrl.split('/').pop();
           const downloadUrl = `${BASE_URL}/learning-materials/download/${encodeURIComponent(filename ?? '')}`;
-
           Linking.openURL(downloadUrl);
         }}
       >
         <Text style={styles.downloadButtonText}>⬇️ Download</Text>
       </TouchableOpacity>
 
+      {material.uploadedById === currentUserId && (
+        <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
+          <Text style={styles.deleteButtonText}>🗑️ Delete</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#f9f9f9',
+    backgroundColor: '#fff',
+    borderRadius: 12,
     padding: 16,
     marginBottom: 12,
-    borderRadius: 12,
-    borderColor: '#ccc',
+    borderColor: '#E0E0E0',
     borderWidth: 1,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 6,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
   },
   title: {
-    fontWeight: 'bold',
-    fontSize: 18,
+    fontSize: 16,
+    fontWeight: '600',
     color: '#124E57',
-  },
-  description: {
-    color: '#333',
     marginBottom: 4,
   },
-  link: {
-    color: '#15808D',
-    fontWeight: '500',
-    textDecorationLine: 'underline',
+  description: {
+    color: '#444',
+    fontSize: 14,
+    marginBottom: 8,
   },
   downloadButton: {
-    marginTop: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
     backgroundColor: '#15808D',
+    paddingVertical: 8,
     borderRadius: 8,
     alignItems: 'center',
+    marginBottom: 8,
   },
   downloadButtonText: {
     color: '#fff',
     fontWeight: '600',
   },
-
+  deleteButton: {
+    backgroundColor: '#F15A22',
+    paddingVertical: 8,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  deleteButtonText: {
+    color: '#fff',
+    fontWeight: '600',
+  },
 });
 
 export default LearningMaterialCard;
