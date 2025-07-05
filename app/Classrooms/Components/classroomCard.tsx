@@ -7,9 +7,10 @@ interface Props {
   classroom: Classroom;
   onEdit: () => void;
   onDelete: () => void;
+  isEditable?: boolean;
 }
 
-const ClassroomCard: React.FC<Props> = ({ classroom, onEdit, onDelete }) => {
+const ClassroomCard: React.FC<Props> = ({ classroom, onEdit, onDelete, isEditable = false }) => {
   const router = useRouter();
 
   return (
@@ -27,11 +28,14 @@ const ClassroomCard: React.FC<Props> = ({ classroom, onEdit, onDelete }) => {
         <Text style={styles.classroomDetails}>Grade {classroom.grade}</Text>
       </TouchableOpacity>
 
-      <View style={styles.cardActions}>
-        <Button title="Edit" onPress={onEdit} color="#15808D" />
-        <View style={{ width: 8 }} />
-        <Button title="Delete" onPress={onDelete} color="#F15A22" />
-      </View>
+      {isEditable && (
+        <View style={styles.cardActions}>
+          <Button title="Edit" onPress={onEdit} color="#15808D" />
+          <View style={{ width: 8 }} />
+          <Button title="Delete" onPress={onDelete} color="#F15A22" />
+        </View>
+      )}
+
     </View>
   );
 };

@@ -14,6 +14,8 @@ import {
     ClassroomPayload,
     createClassroom,
     deleteClassroom,
+    fetchSchoolClassrooms,
+    fetchStudentClassrooms,
     fetchTeacherClassrooms,
     updateClassroom,
 } from '../../src/api/classrooms';
@@ -24,7 +26,7 @@ import AddClassroomModal from './Components/addClassroomModal';
 import ClassroomCard from './Components/classroomCard';
 import EditClassroomModal from './Components/editClassroomModal';
 
-export default function TeacherClassrooms() {
+export default function Classrooms() {
     const user = useAuth((state) => state.user);
     const logout = useLogout();
     const router = useRouter();
@@ -34,17 +36,32 @@ export default function TeacherClassrooms() {
     const [isEditVisible, setEditVisible] = useState(false);
     const [editData, setEditData] = useState<Classroom | null>(null);
 
+    const fetcher = () => {
+        if (user?.role === 'ADMIN' && user.schoolId) {
+            return fetchSchoolClassrooms(user.schoolId);
+        } else if (user?.role === 'TEACHER') {
+            return fetchTeacherClassrooms(user.id);
+        } else if (user?.role === 'STUDENT') {
+            return fetchStudentClassrooms(user.id);
+        } else {
+            return Promise.resolve([]);
+        }
+    };
+
     const { data: classrooms, isLoading, error } = useQuery({
-        queryKey: ['teacher-classrooms'],
-        queryFn: () => fetchTeacherClassrooms(user?.id ?? 0),
+        queryKey: ['classrooms', user?.role, user?.id],
+        queryFn: fetcher,
         enabled: !!user?.id,
     });
 
     const handleCreate = async (payload: ClassroomPayload) => {
         try {
-            await createClassroom({ ...payload, teacherId: user!.id });
+            await createClassroom({
+                ...payload,
+                teacherId: undefined, // school admin will select teacher in modal
+            });
             setAddVisible(false);
-            queryClient.invalidateQueries({ queryKey: ['teacher-classrooms'] });
+            queryClient.invalidateQueries({ queryKey: ['classrooms', user?.role, user?.id] });
         } catch {
             alert('Failed to create classroom.');
         }
@@ -56,7 +73,7 @@ export default function TeacherClassrooms() {
             await updateClassroom(editData.id, payload);
             setEditVisible(false);
             setEditData(null);
-            queryClient.invalidateQueries({ queryKey: ['teacher-classrooms'] });
+            queryClient.invalidateQueries({ queryKey: ['classrooms', user?.role, user?.id] });
         } catch {
             alert('Failed to update classroom.');
         }
@@ -65,7 +82,7 @@ export default function TeacherClassrooms() {
     const handleDelete = async (id: number) => {
         try {
             await deleteClassroom(id);
-            queryClient.invalidateQueries({ queryKey: ['teacher-classrooms'] });
+            queryClient.invalidateQueries({ queryKey: ['classrooms', user?.role, user?.id] });
         } catch {
             alert('Failed to delete classroom.');
         }
@@ -99,12 +116,14 @@ export default function TeacherClassrooms() {
             <View style={styles.mainContent}>
                 <Text style={styles.title}>Your Classes</Text>
 
-                <TouchableOpacity
-                    style={styles.addButton}
-                    onPress={() => setAddVisible(true)}
-                >
-                    <Text style={styles.addButtonText}>Add Classroom</Text>
-                </TouchableOpacity>
+                {user?.role === 'ADMIN' && (
+                    <TouchableOpacity
+                        style={styles.addButton}
+                        onPress={() => setAddVisible(true)}
+                    >
+                        <Text style={styles.addButtonText}>Add Classroom</Text>
+                    </TouchableOpacity>
+                )}
 
                 <FlatList
                     data={classrooms}
@@ -113,34 +132,45 @@ export default function TeacherClassrooms() {
                         <ClassroomCard
                             classroom={item}
                             onEdit={() => {
-                                setEditData(item);
-                                setEditVisible(true);
+                                if (user?.role === 'ADMIN') {
+                                    setEditData(item);
+                                    setEditVisible(true);
+                                }
                             }}
-                            onDelete={() => handleDelete(item.id)}
+                            onDelete={() => {
+                                if (user?.role === 'ADMIN') {
+                                    handleDelete(item.id);
+                                }
+                            }}
+                            isEditable={user?.role === 'ADMIN'} // ✅ Add this
                         />
                     )}
                 />
 
-                <AddClassroomModal
-                    isVisible={isAddVisible}
-                    onClose={() => setAddVisible(false)}
-                    onSubmit={handleCreate}
-                />
 
-                {editData && (
-                    <EditClassroomModal
-                        isVisible={isEditVisible}
-                        onClose={() => {
-                            setEditVisible(false);
-                            setEditData(null);
-                        }}
-                        onSubmit={handleEdit}
-                        initialData={{
-                            name: editData.name,
-                            grade: String(editData.grade),
-                            subjectId: editData.subject?.id || 0  // fallback to 0 if subject is undefined
-                        }}
-                    />
+                {user?.role === 'ADMIN' && (
+                    <>
+                        <AddClassroomModal
+                            isVisible={isAddVisible}
+                            onClose={() => setAddVisible(false)}
+                            onSubmit={handleCreate}
+                        />
+                        {editData && (
+                            <EditClassroomModal
+                                isVisible={isEditVisible}
+                                onClose={() => {
+                                    setEditVisible(false);
+                                    setEditData(null);
+                                }}
+                                onSubmit={handleEdit}
+                                initialData={{
+                                    name: editData.name,
+                                    grade: String(editData.grade),
+                                    subjectId: editData.subject?.id || 0,
+                                }}
+                            />
+                        )}
+                    </>
                 )}
             </View>
         </View>

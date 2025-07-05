@@ -38,6 +38,14 @@ export const fetchTeacherClassrooms = async (teacherId: number): Promise<Classro
     return response.data;
 };
 
+// Fetch all classrooms for a student
+export const fetchStudentClassrooms = async (studentId: number): Promise<Classroom[]> => {
+    const response = await api.get<Classroom[]>('/classrooms', {
+        params: { studentId },
+    });
+    return response.data;
+};
+
 // Fetch single classroom by ID
 export const fetchClassroomById = async (id: number): Promise<Classroom> => {
     const response = await api.get<Classroom>(`/classrooms/${id}`);
