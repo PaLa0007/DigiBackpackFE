@@ -11,10 +11,8 @@ import { useAuth } from '../../../src/store/auth';
 import AddAssignmentModal from '../../Assignments/Components/AddAssignmentModal';
 import EditAssignmentModal from '../../Assignments/Components/EditAssignmentModal';
 import SubmissionUploader from '../../Assignments/Components/SubmissionUploader';
+import CommentSection from '../../Comments/Components/CommentSection';
 import UploadLearningMaterialModal from '../../LearningMaterials/Components/uploadLearningMaterialModal';
-
-
-
 import Sidebar from '../../Shared/Sidebar';
 
 export default function ClassroomFeed() {
@@ -184,7 +182,6 @@ export default function ClassroomFeed() {
                     <SubmissionUploader
                       assignmentId={item.id}
                       onUploaded={handleFeedRefresh}
-                      hideRevokeButton // ✅ disables revoke in feed context
                     />
                   </View>
                 )}
@@ -262,6 +259,9 @@ export default function ClassroomFeed() {
             }}
           />
         )}
+
+        {/* Classroom Comments Section */}
+        <CommentSection classroomId={Number(id)} />
       </View>
     </View>
   );
