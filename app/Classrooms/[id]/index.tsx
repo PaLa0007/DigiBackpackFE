@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, Linking, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { AssignmentDto, deleteAssignment, fetchAssignmentById } from '../../../src/api/assignments';
 import { FeedItem, fetchClassroomFeed } from '../../../src/api/classrooms';
@@ -20,6 +20,16 @@ export default function ClassroomFeed() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const logout = useLogout();
   const user = useAuth((state) => state.user);
+
+  useEffect(() => {
+    if (user?.role === 'SCHOOL_ADMIN' && id) {
+      router.replace({
+        pathname: '/Classrooms/[id]/students',
+        params: { id: String(id) },
+      });
+    }
+  }, [user, id]);
+
   const [activeTab, setActiveTab] = useState<'assignment' | 'material'>('assignment');
   const [addModalVisible, setAddModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
@@ -47,7 +57,6 @@ export default function ClassroomFeed() {
   const handleFeedRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ['classroom-feed', id] });
   };
-
 
   if (isLoading) {
     return (
@@ -130,7 +139,7 @@ export default function ClassroomFeed() {
           </>
         )}
 
-        {user?.role === 'TEACHER' && (
+        {user?.role === 'SCHOOL_ADMIN' && (
           <TouchableOpacity
             style={styles.studentPreviewCard}
             onPress={() =>

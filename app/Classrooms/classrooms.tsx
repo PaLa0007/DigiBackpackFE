@@ -37,7 +37,7 @@ export default function Classrooms() {
     const [editData, setEditData] = useState<Classroom | null>(null);
 
     const fetcher = () => {
-        if (user?.role === 'ADMIN' && user.schoolId) {
+        if (user?.role === 'SCHOOL_ADMIN' && user.schoolId) {
             return fetchSchoolClassrooms(user.schoolId);
         } else if (user?.role === 'TEACHER') {
             return fetchTeacherClassrooms(user.id);
@@ -58,7 +58,7 @@ export default function Classrooms() {
         try {
             await createClassroom({
                 ...payload,
-                teacherId: undefined, // school admin will select teacher in modal
+                schoolId: user!.schoolId,
             });
             setAddVisible(false);
             queryClient.invalidateQueries({ queryKey: ['classrooms', user?.role, user?.id] });
@@ -116,7 +116,7 @@ export default function Classrooms() {
             <View style={styles.mainContent}>
                 <Text style={styles.title}>Your Classes</Text>
 
-                {user?.role === 'ADMIN' && (
+                {user?.role === 'SCHOOL_ADMIN' && (
                     <TouchableOpacity
                         style={styles.addButton}
                         onPress={() => setAddVisible(true)}
@@ -132,23 +132,23 @@ export default function Classrooms() {
                         <ClassroomCard
                             classroom={item}
                             onEdit={() => {
-                                if (user?.role === 'ADMIN') {
+                                if (user?.role === 'SCHOOL_ADMIN') {
                                     setEditData(item);
                                     setEditVisible(true);
                                 }
                             }}
                             onDelete={() => {
-                                if (user?.role === 'ADMIN') {
+                                if (user?.role === 'SCHOOL_ADMIN') {
                                     handleDelete(item.id);
                                 }
                             }}
-                            isEditable={user?.role === 'ADMIN'} // ✅ Add this
+                            isEditable={user?.role === 'SCHOOL_ADMIN'} // ✅ Add this
                         />
                     )}
                 />
 
 
-                {user?.role === 'ADMIN' && (
+                {user?.role === 'SCHOOL_ADMIN' && (
                     <>
                         <AddClassroomModal
                             isVisible={isAddVisible}
@@ -166,7 +166,8 @@ export default function Classrooms() {
                                 initialData={{
                                     name: editData.name,
                                     grade: String(editData.grade),
-                                    subjectId: editData.subject?.id || 0,
+                                    subjectId: editData.subjectId ?? 0,
+                                    teacherId: editData.teacherId ?? 0,
                                 }}
                             />
                         )}

@@ -22,6 +22,10 @@ export default function ManageStudentsScreen() {
     const user = useAuth((state) => state.user);
     const queryClient = useQueryClient();
 
+    if (user?.role !== 'SCHOOL_ADMIN') {
+        return null;
+    }
+
     const { data: students, isLoading: loadingStudents } = useQuery({
         queryKey: ['students'],
         queryFn: fetchStudents,

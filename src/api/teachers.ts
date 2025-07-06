@@ -73,3 +73,8 @@ export const fetchTeacherDashboardStats = async (teacherId: number): Promise<Tea
     const response = await api.get<TeacherDashboardStats>(`/teachers/${teacherId}/dashboard-stats`);
     return response.data;
 };
+
+export const fetchTeachersBySchool = async (schoolId: number): Promise<Teacher[]> => {
+    const response = await api.get<Teacher[]>(`/teachers/by-school/${schoolId}`);
+    return response.data;
+};

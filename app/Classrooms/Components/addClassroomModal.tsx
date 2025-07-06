@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Button, Modal, StyleSheet, Text, TextInput, View } from 'react-native';
 import { ClassroomPayload } from '../../../src/api/classrooms';
 import { Subject, fetchSubjectsBySchool } from '../../../src/api/subjects';
+import { Teacher, fetchTeachersBySchool } from '../../../src/api/teachers';
 import { useAuth } from '../../../src/store/auth';
 
 interface Props {
@@ -17,24 +18,39 @@ const AddClassroomModal: React.FC<Props> = ({ isVisible, onClose, onSubmit }) =>
     name: '',
     grade: '',
     subjectId: 0,
+    teacherId: undefined,
   });
 
   const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
+
+  // ✅ Reset form each time modal is opened
+  useEffect(() => {
+    if (isVisible) {
+      setFormData({
+        name: '',
+        grade: '',
+        subjectId: 0,
+        teacherId: undefined,
+      });
+    }
+  }, [isVisible]);
 
   useEffect(() => {
     if (user?.schoolId) {
       fetchSubjectsBySchool(user.schoolId).then(setSubjects);
+      fetchTeachersBySchool(user.schoolId).then(setTeachers);
     }
   }, [user]);
 
-  const handleChange = (field: keyof ClassroomPayload, value: string | number) => {
+  const handleChange = (field: keyof ClassroomPayload, value: string | number | undefined) => {
     setFormData((prev) => ({
       ...prev,
       [field]: field === 'grade' && typeof value === 'string' ? value.toUpperCase() : value,
     }));
   };
 
-  const isValid = formData.name && formData.grade && formData.subjectId;
+  const isValid = formData.name.trim() !== '' && formData.grade.trim() !== '' && formData.subjectId !== 0;
 
   return (
     <Modal visible={isVisible} transparent animationType="slide">
@@ -64,6 +80,17 @@ const AddClassroomModal: React.FC<Props> = ({ isVisible, onClose, onSubmit }) =>
             <Picker.Item label="Select a subject..." value={0} />
             {subjects.map((s) => (
               <Picker.Item key={s.id} label={s.name} value={s.id} />
+            ))}
+          </Picker>
+
+          <Text style={styles.label}>Teacher</Text>
+          <Picker
+            selectedValue={formData.teacherId ?? 0}
+            onValueChange={(value) => handleChange('teacherId', Number(value) === 0 ? undefined : Number(value))}
+          >
+            <Picker.Item label="Select a teacher..." value={0} />
+            {teachers.map((t) => (
+              <Picker.Item key={t.id} label={`${t.firstName} ${t.lastName}`} value={t.id} />
             ))}
           </Picker>
 
@@ -105,6 +132,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   label: {
+    marginTop: 12,
     marginBottom: 4,
     fontWeight: '600',
     color: '#333',
