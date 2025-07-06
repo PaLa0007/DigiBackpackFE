@@ -101,9 +101,8 @@ export const downloadSubmissionFile = async (
       document.body.removeChild(anchor);
       window.URL.revokeObjectURL(url);
 
-      console.log(`✅ Download completed for ${fileName} on web.`);
     } catch (error) {
-      console.error('❌ Web download failed:', error);
+
       throw error;
     }
     return; // done
@@ -112,13 +111,10 @@ export const downloadSubmissionFile = async (
   // Android & iOS
   try {
     const fileUri = `${FileSystem.documentDirectory}${fileName}`;
-    console.log('📥 Downloading to:', fileUri);
 
     const { uri } = await FileSystem.downloadAsync(downloadUrl, fileUri);
-    console.log('✅ File downloaded to:', uri);
     return uri;
   } catch (error) {
-    console.error('❌ Download failed:', error);
     throw error;
   }
 };

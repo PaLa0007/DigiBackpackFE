@@ -10,7 +10,9 @@ import { useLogout } from '../../../src/hooks/useLogout';
 import { useAuth } from '../../../src/store/auth';
 import AddAssignmentModal from '../../Assignments/Components/AddAssignmentModal';
 import EditAssignmentModal from '../../Assignments/Components/EditAssignmentModal';
+import SubmissionUploader from '../../Assignments/Components/SubmissionUploader';
 import UploadLearningMaterialModal from '../../LearningMaterials/Components/uploadLearningMaterialModal';
+
 
 
 import Sidebar from '../../Shared/Sidebar';
@@ -26,8 +28,6 @@ export default function ClassroomFeed() {
   const [selectedAssignment, setSelectedAssignment] = useState<AssignmentDto | null>(null);
   const queryClient = useQueryClient();
   const [uploadModalVisible, setUploadModalVisible] = useState(false);
-
-
 
   const { data: feedItems, isLoading, error } = useQuery({
     queryKey: ['classroom-feed', id],
@@ -45,6 +45,11 @@ export default function ClassroomFeed() {
     await deleteAssignment(assignmentId);
     queryClient.invalidateQueries({ queryKey: ['classroom-feed', id] });
   };
+
+  const handleFeedRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: ['classroom-feed', id] });
+  };
+
 
   if (isLoading) {
     return (
@@ -157,8 +162,6 @@ export default function ClassroomFeed() {
           />
         )}
 
-
-
         <FlatList
           data={filteredItems}
           keyExtractor={(_, index) => index.toString()}
@@ -174,6 +177,17 @@ export default function ClassroomFeed() {
                   Posted by {item.createdBy} on{' '}
                   {format(new Date(item.createdAt), 'dd MMM yyyy, HH:mm')}
                 </Text>
+
+                {/* Student inline submission uploader */}
+                {user?.role === 'STUDENT' && item.type === 'assignment' && item.id && (
+                  <View style={{ marginTop: 12 }}>
+                    <SubmissionUploader
+                      assignmentId={item.id}
+                      onUploaded={handleFeedRefresh}
+                      hideRevokeButton // ✅ disables revoke in feed context
+                    />
+                  </View>
+                )}
 
                 {/*  Assignment actions (teachers) */}
                 {user?.role === 'TEACHER' && item.type === 'assignment' && item.id && (
