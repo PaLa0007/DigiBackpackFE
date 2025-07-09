@@ -6,6 +6,8 @@ export type CommentDto = {
     createdById: number;
     createdByFirstName: string;
     createdByLastName: string;
+    createdByRole: 'STUDENT' | 'TEACHER';
+    recipientStudentId?: number | null;
     assignmentId?: number;
     classroomId?: number;
     learningMaterialId?: number;
@@ -43,14 +45,17 @@ export const postClassroomComment = async (
 export const postAssignmentComment = async (
     assignmentId: number,
     createdById: number,
-    content: string
+    content: string,
+    recipientStudentId?: number
 ): Promise<CommentDto> => {
     const response = await api.post<CommentDto>(`/comments/assignment/${assignmentId}`, {
         createdById,
         content,
+        recipientStudentId: recipientStudentId ?? null
     });
     return response.data;
 };
+
 
 // Update comment
 export const updateComment = async (commentId: number, content: string, userId: number): Promise<CommentDto> => {

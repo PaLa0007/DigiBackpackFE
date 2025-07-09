@@ -112,7 +112,7 @@ const SubmissionUploader: React.FC<Props> = ({ assignmentId, onUploaded, hideRev
             </Text>
             <View style={{ height: 8 }} />
             <Button
-                title="Submit Submission"
+                title="Submit!"
                 onPress={handleSubmit}
                 disabled={selectedFiles.length === 0 && description.trim() === ''}
             />

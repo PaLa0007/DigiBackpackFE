@@ -3,9 +3,10 @@ import { useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
+  ScrollView,
   StyleSheet,
   Text,
-  View,
+  View
 } from 'react-native';
 import { fetchAssignmentById } from '../../src/api/assignments';
 import { useLogout } from '../../src/hooks/useLogout';
@@ -14,7 +15,6 @@ import CommentSection from '../Comments/Components/CommentSection';
 import Sidebar from '../Shared/Sidebar';
 import SubmissionList from './Components/SubmissionList';
 import SubmissionUploader from './Components/SubmissionUploader';
-
 
 export default function AssignmentDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -28,7 +28,7 @@ export default function AssignmentDetailsScreen() {
     enabled: !!assignmentId,
   });
 
-  //  Added refresh control
+  // Refresh control for reloading submission status on upload/revoke
   const [refreshKey, setRefreshKey] = useState(0);
   const handleUploaded = () => {
     setRefreshKey(prev => prev + 1);
@@ -59,30 +59,32 @@ export default function AssignmentDetailsScreen() {
   return (
     <View style={styles.wrapper}>
       <Sidebar onLogout={logout} />
-      <View style={styles.mainContent}>
+
+      <ScrollView style={styles.mainContent} contentContainerStyle={{ padding: 16 }}>
         <Text style={styles.title}>{assignment.title}</Text>
         <Text style={styles.description}>{assignment.description}</Text>
         <Text style={styles.dueDate}>Due: {assignment.dueDate}</Text>
 
-        {user?.role === 'STUDENT' && (
-          <SubmissionUploader
+        {user?.role === 'TEACHER' && (
+          <SubmissionList
             assignmentId={assignmentId}
-            onUploaded={handleUploaded} //  pass refresh trigger
+            refreshKey={refreshKey}
           />
         )}
 
-        <Text style={styles.submissionsTitle}>Submissions</Text>
-        <SubmissionList
-          assignmentId={assignmentId}
-          refreshKey={refreshKey} //  refreshes on upload/revoke
-        />
+        {user?.role === 'STUDENT' && (
+          <SubmissionUploader
+            assignmentId={assignmentId}
+            onUploaded={handleUploaded}
+          />
+        )}
 
         {/* Comments Section */}
         <CommentSection
           classroomId={assignment.classroomId}
           assignmentId={assignmentId}
         />
-      </View>
+      </ScrollView>
     </View>
   );
 }
@@ -113,12 +115,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#888',
     marginBottom: 16,
-  },
-  submissionsTitle: {
-    marginTop: 20,
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#15808D',
   },
   centered: {
     flex: 1,

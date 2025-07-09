@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import React, { useState } from 'react';
-import { Button, StyleSheet, Text, TextInput, View } from 'react-native';
+import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { CommentDto, deleteComment, updateComment } from '../../../src/api/comments';
 import { useAuth } from '../../../src/store/auth';
 
@@ -28,7 +28,7 @@ const CommentCard: React.FC<Props> = ({ comment, queryKey }) => {
     });
 
     const deleteCommentMutation = useMutation({
-        mutationFn: async () => {  
+        mutationFn: async () => {
             if (!user) return;
             return deleteComment(comment.id, user.id);
         },
@@ -52,9 +52,28 @@ const CommentCard: React.FC<Props> = ({ comment, queryKey }) => {
 
     return (
         <View style={styles.commentCard}>
-            <Text style={styles.commentAuthor}>
-                {comment.createdByFirstName} {comment.createdByLastName}
-            </Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Text style={styles.commentAuthor}>
+                    {comment.createdByFirstName} {comment.createdByLastName}
+                </Text>
+                {user?.id === comment.createdById && !editing && (
+                    <View style={styles.buttonRow}>
+                        <TouchableOpacity
+                            style={[styles.actionButton, { backgroundColor: '#15808D' }]}
+                            onPress={() => setEditing(true)}
+                        >
+                            <Text style={styles.actionButtonText}>Edit</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.actionButton, { backgroundColor: '#D32F2F' }]}
+                            onPress={handleDelete}
+                        >
+                            <Text style={styles.actionButtonText}>Delete</Text>
+                        </TouchableOpacity>
+                    </View>
+                )}
+            </View>
+
             {editing ? (
                 <>
                     <TextInput
@@ -62,9 +81,19 @@ const CommentCard: React.FC<Props> = ({ comment, queryKey }) => {
                         value={editedContent}
                         onChangeText={setEditedContent}
                     />
-                    <View style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}>
-                        <Button title="Save" onPress={handleSave} />
-                        <Button title="Cancel" color="#888" onPress={() => setEditing(false)} />
+                    <View style={styles.buttonRow}>
+                        <TouchableOpacity
+                            style={[styles.actionButton, { backgroundColor: '#15808D' }]}
+                            onPress={handleSave}
+                        >
+                            <Text style={styles.actionButtonText}>Save</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.actionButton, { backgroundColor: '#888' }]}
+                            onPress={() => setEditing(false)}
+                        >
+                            <Text style={styles.actionButtonText}>Cancel</Text>
+                        </TouchableOpacity>
                     </View>
                 </>
             ) : (
@@ -74,16 +103,12 @@ const CommentCard: React.FC<Props> = ({ comment, queryKey }) => {
                         {new Date(comment.createdAt).toLocaleDateString()}{' '}
                         {new Date(comment.createdAt).toLocaleTimeString()}
                     </Text>
-                    {user?.id === comment.createdById && (
-                        <View style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}>
-                            <Button title="Edit" onPress={() => setEditing(true)} />
-                            <Button title="Delete" color="#D32F2F" onPress={handleDelete} />
-                        </View>
-                    )}
                 </>
             )}
         </View>
     );
+
+
 };
 
 const styles = StyleSheet.create({
@@ -92,6 +117,22 @@ const styles = StyleSheet.create({
     commentContent: { color: '#333', marginTop: 2 },
     commentDate: { fontSize: 10, color: '#777', marginTop: 2 },
     input: { borderWidth: 1, borderColor: '#ccc', padding: 8, borderRadius: 8, marginTop: 4 },
+    buttonRow: {
+        flexDirection: 'row',
+        gap: 8,
+        marginTop: 6,
+    },
+    actionButton: {
+        paddingVertical: 6,
+        paddingHorizontal: 12,
+        borderRadius: 16,
+        alignItems: 'center',
+    },
+    actionButtonText: {
+        color: '#fff',
+        fontWeight: '600',
+    },
+
 });
 
 export default CommentCard;

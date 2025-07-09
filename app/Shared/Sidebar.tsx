@@ -44,8 +44,8 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
                 return [
                     { label: 'Dashboard', icon: '🏠', path: '/home-student' },
                     { label: 'My Classes', icon: '📘', path: '/Classrooms/classrooms' }, // optional/future
-                    { label: 'Materials', icon: '📚', path: '/student-materials' },
-                    { label: 'Assignments', icon: '📝', path: '/Assignments/assignments' }, // optional/future
+                    { label: 'Schedules', icon: '🗓️', path: '/Schedules/schedules' },
+
                 ];
             default:
                 return [];

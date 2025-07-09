@@ -14,12 +14,19 @@ const SubmissionList: React.FC<Props> = ({ assignmentId, refreshKey }) => {
 
   const load = async () => {
     const data = await fetchSubmissions(assignmentId);
-    setSubmissions(
-      user?.role === 'TEACHER'
-        ? data
-        : data.filter((sub) => sub.studentId === user?.id)
-    );
+
+    console.log("Fetched submissions from backend:", data);
+    console.log("User role:", user?.role);
+
+    const finalData = user?.role === 'TEACHER'
+      ? data
+      : data.filter((sub) => sub.studentId === user?.id);
+
+    console.log("Final submissions used in state:", finalData);
+
+    setSubmissions(finalData);
   };
+
 
   useEffect(() => {
     load();
