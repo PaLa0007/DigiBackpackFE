@@ -4,19 +4,17 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   Linking,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
 import { AssignmentDto, deleteAssignment, fetchAssignmentById } from '../../../src/api/assignments';
 import { fetchClassroomFeed } from '../../../src/api/classrooms';
 import { deleteComment, postClassroomComment, updateComment } from '../../../src/api/comments';
-import { deleteLearningMaterial } from '../../../src/api/learningMaterials';
 import { useLogout } from '../../../src/hooks/useLogout';
 import { useAuth } from '../../../src/store/auth';
 import AddAssignmentModal from '../../Assignments/Components/AddAssignmentModal';
@@ -38,6 +36,8 @@ export default function ClassroomFeed() {
   const [selectedAssignment, setSelectedAssignment] = useState<AssignmentDto | null>(null);
   const [uploadModalVisible, setUploadModalVisible] = useState(false);
   const [editingMessageId, setEditingMessageId] = useState<number | null>(null);
+  const [pressedAction, setPressedAction] = useState(false);
+
   const [newMessage, setNewMessage] = useState('');
 
   useEffect(() => {
@@ -62,8 +62,14 @@ export default function ClassroomFeed() {
   };
 
   const handleDelete = async (assignmentId: number) => {
-    await deleteAssignment(assignmentId);
-    queryClient.invalidateQueries({ queryKey: ['classroom-feed', id] });
+    try {
+      console.log('Attempting to delete assignment with ID:', assignmentId);
+      await deleteAssignment(assignmentId);
+      console.log('Deletion successful, invalidating classroom-feed cache');
+      await queryClient.invalidateQueries({ queryKey: ['classroom-feed', id] });
+    } catch (error) {
+      console.error('Error during assignment deletion:', error);
+    }
   };
 
   const handlePostMessage = async () => {
@@ -234,25 +240,16 @@ export default function ClassroomFeed() {
 
                 {item.type === 'assignment' && (
                   <>
-                    {/* Clickable section for navigation */}
-                    <TouchableOpacity
-                      onPress={() =>
-                        router.push({
-                          pathname: '/Assignments/[id]',
-                          params: { id: String(item.id) },
-                        })
-                      }
-                      activeOpacity={0.8}
-                    >
+                    <View>
                       <Text style={styles.feedType}>[ASSIGNMENT]</Text>
                       {item.title && <Text style={styles.feedTitle}>{item.title}</Text>}
                       <Text style={styles.feedDescription}>{item.description}</Text>
                       <Text style={styles.meta}>
                         Posted by {item.createdBy} on {format(new Date(item.createdAt), 'dd MMM yyyy, HH:mm')}
                       </Text>
-                    </TouchableOpacity>
+                    </View>
 
-                    {/* Student submission uploader remains functional */}
+                    {/* Student submission uploader */}
                     {user?.role === 'STUDENT' && item.id && (
                       <SubmissionUploader
                         assignmentId={item.id}
@@ -262,34 +259,48 @@ export default function ClassroomFeed() {
                       />
                     )}
 
-                    {/* Teacher edit/delete remains functional */}
+                    {/* Teacher actions: View | Edit | Delete */}
                     {user?.role === 'TEACHER' && item.id && (
                       <View style={styles.actionsRow}>
+                        {/* View button */}
+                        <TouchableOpacity
+                          style={styles.actionButton}
+                          onPress={() =>
+                            router.push({
+                              pathname: '/Assignments/[id]',
+                              params: { id: String(item.id) },
+                            })
+                          }
+                        >
+                          <Text style={styles.actionButtonText}>View</Text>
+                        </TouchableOpacity>
+
+                        {/* Edit button */}
                         <TouchableOpacity
                           style={styles.actionButton}
                           onPress={() => openEditModal(item.id!)}
                         >
                           <Text style={styles.actionButtonText}>Edit</Text>
                         </TouchableOpacity>
+
+                        {/* Delete button in red */}
                         <TouchableOpacity
                           style={[styles.actionButton, { backgroundColor: '#D32F2F' }]}
-                          onPress={() => {
-                            Alert.alert('Confirm', 'Delete this assignment?', [
-                              { text: 'Cancel', style: 'cancel' },
-                              { text: 'Delete', style: 'destructive', onPress: () => handleDelete(item.id!) }
-                            ]);
+                          onPress={async () => {
+                            try {
+                              console.log(`Delete pressed for assignment ID: ${item.id}`);
+                              await handleDelete(item.id!);
+                            } catch (error) {
+                              console.error('Failed to delete assignment:', error);
+                            }
                           }}
                         >
                           <Text style={styles.actionButtonText}>Delete</Text>
                         </TouchableOpacity>
                       </View>
                     )}
-
-                    {/* Inline assignment-specific comments if re-enabled */}
-                    {/* <CommentSection classroomId={Number(id)} assignmentId={item.id} /> */}
                   </>
                 )}
-
 
                 {item.type === 'material' && (
                   <>
@@ -318,27 +329,17 @@ export default function ClassroomFeed() {
                     {user?.role === 'TEACHER' && item.id && (
                       <TouchableOpacity
                         style={[styles.fullWidthButton, { backgroundColor: '#D32F2F' }]}
-                        onPress={() => {
-                          Alert.alert('Confirm', 'Delete this material?', [
-                            { text: 'Cancel', style: 'cancel' },
-                            {
-                              text: 'Delete',
-                              style: 'destructive',
-                              onPress: async () => {
-                                try {
-                                  await deleteLearningMaterial(item.id!);
-                                  queryClient.invalidateQueries({ queryKey: ['classroom-feed', id] });
-                                } catch (error) {
-                                  console.error('Failed to delete material:', error);
-                                }
-                              }
-                            }
-                          ]);
+                        onPress={async () => {
+                          try {
+                            console.log(`Delete pressed for material ID: ${item.id}`);
+                            await handleDelete(item.id!);
+                          } catch (error) {
+                            console.error('Failed to delete material:', error);
+                          }
                         }}
                       >
                         <Text style={styles.buttonText}>🗑️ Delete Material</Text>
                       </TouchableOpacity>
-
                     )}
                   </>
                 )}
@@ -593,8 +594,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontSize: 14,
   },
-
-
 
 });
 

@@ -95,7 +95,7 @@ const AssignmentsScreen: React.FC = () => {
                 user.role === 'TEACHER'
                   ? async () => {
                       await deleteAssignment(item.id);
-                      loadAssignments();
+                      await loadAssignments();
                     }
                   : undefined
               }

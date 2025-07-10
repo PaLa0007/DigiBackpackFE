@@ -25,6 +25,11 @@ export type CreateStudentPayload = {
   schoolId: number;
 };
 
+export const fetchStudentDashboard = async (studentId: number) => {
+  const response = await api.get(`/students/${studentId}/dashboard`);
+  return response.data;
+};
+
 export const fetchStudents = async (): Promise<Student[]> => {
   const response = await api.get<Student[]>('/students');
   return response.data;
