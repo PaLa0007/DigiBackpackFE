@@ -3,14 +3,14 @@ import React, { useEffect, useState } from 'react';
 import {
     Alert,
     Button,
-    FlatList,
+    ScrollView,
     StyleSheet,
     Text,
     View
 } from 'react-native';
 
 import { Classroom, fetchSchoolClassrooms } from '../../src/api/classrooms';
-import { Schedule, deleteSchedule, fetchSchedulesByGrade } from '../../src/api/schedules';
+import { Schedule, deleteSchedule, fetchScheduleForStudent, fetchScheduleForTeacher, fetchSchedulesByGrade } from '../../src/api/schedules';
 import { useAuth } from '../../src/store/auth';
 import Sidebar from '../Shared/Sidebar';
 import ScheduleFormModal from './Components/scheduleFormModal';
@@ -24,9 +24,14 @@ const Schedules = () => {
     const [showModal, setShowModal] = useState(false);
     const [editItem, setEditItem] = useState<Schedule | null>(null);
 
+    const daysOfWeek = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY'];
+
     useEffect(() => {
         const loadClassrooms = async () => {
-            if (user?.schoolId) {
+            if (!user) return;
+            if (user.role !== 'SCHOOL_ADMIN') return;
+
+            if (user.schoolId) {
                 const cls = await fetchSchoolClassrooms(user.schoolId);
                 setClassrooms(cls);
 
@@ -41,15 +46,25 @@ const Schedules = () => {
     }, [user]);
 
     useEffect(() => {
-        const loadSchedules = async () => {
-            if (selectedGrade) {
+        const loadSchedulesForUser = async () => {
+            if (!user) return;
+
+            if (user.role === 'STUDENT') {
+                if (!user.id) return;
+                const data = await fetchScheduleForStudent(user.id);
+                setSchedules(data);
+            } else if (user.role === 'TEACHER') {
+                if (!user.id) return;
+                const data = await fetchScheduleForTeacher(user.id);
+                setSchedules(data);
+            } else if (user.role === 'SCHOOL_ADMIN' && selectedGrade) {
                 const data = await fetchSchedulesByGrade(selectedGrade);
                 setSchedules(data);
             }
         };
 
-        loadSchedules();
-    }, [selectedGrade]);
+        loadSchedulesForUser();
+    }, [user, selectedGrade]);
 
     const handleDelete = async (id: number) => {
         Alert.alert('Confirm', 'Delete this schedule block?', [
@@ -59,20 +74,20 @@ const Schedules = () => {
                 style: 'destructive',
                 onPress: async () => {
                     await deleteSchedule(id);
-                    const data = await fetchSchedulesByGrade(selectedGrade);
-                    setSchedules(data);
+                    if (user?.role === 'SCHOOL_ADMIN' && selectedGrade) {
+                        const data = await fetchSchedulesByGrade(selectedGrade);
+                        setSchedules(data);
+                    }
                 },
             },
         ]);
     };
 
-    if (user?.role !== 'SCHOOL_ADMIN') {
-        return (
-            <View style={styles.notAllowedWrapper}>
-                <Text style={styles.notAllowed}>You are not authorized to view this screen.</Text>
-            </View>
-        );
-    }
+    const schedulesByDay = daysOfWeek.reduce((acc, day) => {
+        acc[day] = schedules.filter(s => s.dayOfWeek === day)
+            .sort((a, b) => a.startTime.localeCompare(b.startTime));
+        return acc;
+    }, {} as { [key: string]: Schedule[] });
 
     const gradeOptions = Array.from(new Set(classrooms.map((c) => c.grade)));
     const filteredClassrooms = classrooms.filter((c) => c.grade.toString() === selectedGrade);
@@ -86,79 +101,68 @@ const Schedules = () => {
                     <Text style={styles.header}>Schedules</Text>
                 </View>
 
-                <Text style={styles.label}>Select Grade</Text>
-                <Picker
-                    selectedValue={selectedGrade}
-                    onValueChange={(grade) => {
-                        setSelectedGrade(grade);
-                        setSelectedClassroom(null);
-                        setSchedules([]);
-                    }}
-                    style={styles.picker}
-                >
-                    {gradeOptions.map((g) => (
-                        <Picker.Item key={g} label={g.toString()} value={g.toString()} />
-                    ))}
-                </Picker>
+                {user?.role === 'SCHOOL_ADMIN' && (
+                    <>
+                        <Text style={styles.label}>Select Grade</Text>
+                        <Picker
+                            selectedValue={selectedGrade}
+                            onValueChange={(grade) => {
+                                setSelectedGrade(grade);
+                                setSelectedClassroom(null);
+                                setSchedules([]);
+                            }}
+                            style={styles.picker}
+                        >
+                            {gradeOptions.map((g) => (
+                                <Picker.Item key={g} label={g.toString()} value={g.toString()} />
+                            ))}
+                        </Picker>
+                    </>
+                )}
 
-                {filteredClassrooms.map((cls) => (
-                    <View key={cls.id} style={styles.classroomBlock}>
-                        <View style={styles.classroomHeader}>
-                            <Text style={styles.classroomTitle}>{cls.name}</Text>
-                            <Button
-                                title="Add Schedule"
-                                onPress={() => {
-                                    setSelectedClassroom(cls);
-                                    setEditItem(null);
-                                    setShowModal(true);
-                                }}
-                                color="#15808D"
-                            />
+                {user?.role === 'SCHOOL_ADMIN' ? (
+                    filteredClassrooms.map((cls) => (
+                        <View key={cls.id} style={styles.classroomBlock}>
+                            <View style={styles.classroomHeader}>
+                                <Text style={styles.classroomTitle}>{cls.name}</Text>
+                                <Button
+                                    title="Add Schedule"
+                                    onPress={() => {
+                                        setSelectedClassroom(cls);
+                                        setEditItem(null);
+                                        setShowModal(true);
+                                    }}
+                                    color="#15808D"
+                                />
+                            </View>
+                            {/* You can keep the FlatList here if needed for admin */}
                         </View>
-
-                        <FlatList
-                            key={`classroom-${cls.id}`}
-                            data={schedules
-                                .filter((s) => s.classroomId === cls.id)
-                                .slice()
-                                .sort((a, b) => {
-                                    const days = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY'];
-                                    const dayDiff = days.indexOf(a.dayOfWeek) - days.indexOf(b.dayOfWeek);
-                                    if (dayDiff !== 0) return dayDiff;
-                                    return a.startTime.localeCompare(b.startTime); // compares "08:00" vs "08:45"
-                                })}
-
-                            keyExtractor={(item) =>
-                                `${item.id}-${item.subjectId}-${item.teacherId}-${item.dayOfWeek}`
-                            }
-                            renderItem={({ item }) => (
-                                <View style={styles.scheduleItem}>
-                                    <Text style={styles.scheduleText}>
-                                        {item.dayOfWeek} {item.startTime}–{item.endTime}
-                                    </Text>
-                                    <Text style={styles.scheduleText}>
-                                        {item.subjectName} - {item.teacherName}
-                                    </Text>
-                                    <View style={styles.scheduleActions}>
-                                        <Button
-                                            title="Edit"
-                                            onPress={() => {
-                                                setSelectedClassroom(cls);
-                                                setEditItem(item);
-                                                setShowModal(true);
-                                            }}
-                                        />
-                                        <Button
-                                            title="Delete"
-                                            onPress={() => handleDelete(item.id!)}
-                                            color="#F15A22"
-                                        />
-                                    </View>
+                    ))
+                ) : (
+                    <View style={styles.scheduleWrapper}>
+                        <ScrollView
+                            horizontal
+                            contentContainerStyle={styles.scheduleGridContainer}
+                        >
+                            {daysOfWeek.map((day) => (
+                                <View key={day} style={styles.dayColumn}>
+                                    <Text style={styles.dayHeader}>{day}</Text>
+                                    {schedulesByDay[day].length > 0 ? (
+                                        schedulesByDay[day].map((item) => (
+                                            <View key={item.id} style={styles.scheduleItem}>
+                                                <Text style={styles.scheduleText}>{item.startTime}–{item.endTime}</Text>
+                                                <Text style={styles.scheduleText}>{item.subjectName} - {item.teacherName}</Text>
+                                                <Text style={styles.scheduleText}>Classroom: {item.classroomName}</Text>
+                                            </View>
+                                        ))
+                                    ) : (
+                                        <Text style={styles.noClassesText}>No Classes</Text>
+                                    )}
                                 </View>
-                            )}
-                        />
+                            ))}
+                        </ScrollView>
                     </View>
-                ))}
+                )}
             </View>
 
             <ScheduleFormModal
@@ -170,8 +174,10 @@ const Schedules = () => {
                 classroom={selectedClassroom}
                 schedule={editItem}
                 onSaved={async () => {
-                    const data = await fetchSchedulesByGrade(selectedGrade);
-                    setSchedules(data);
+                    if (user?.role === 'SCHOOL_ADMIN' && selectedGrade) {
+                        const data = await fetchSchedulesByGrade(selectedGrade);
+                        setSchedules(data);
+                    }
                     setShowModal(false);
                     setEditItem(null);
                 }}
@@ -195,26 +201,51 @@ const styles = StyleSheet.create({
         marginBottom: 8,
     },
     classroomTitle: { fontSize: 18, fontWeight: 'bold', color: '#15808D' },
-    scheduleItem: {
-        borderBottomWidth: 1,
-        borderColor: '#ccc',
-        paddingVertical: 10,
-    },
-    scheduleText: { fontSize: 16 },
-    scheduleActions: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginTop: 8,
-    },
-    notAllowed: {
-        padding: 16,
-        fontSize: 16,
-        color: 'red',
-    },
-    notAllowedWrapper: {
+    scheduleWrapper: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+    },
+    scheduleGridContainer: {
+        flexDirection: 'row',
+        justifyContent: 'center',  // center columns in the ScrollView
+        gap: 12,                   // if supported, or use margin in dayColumn
+        paddingVertical: 12,
+    },
+    scheduleGridContent: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+    },
+    dayColumn: {
+        backgroundColor: '#f2f2f2',
+        borderRadius: 8,
+        padding: 16,              // slightly larger padding
+        marginHorizontal: 12,     // more balanced spacing
+        alignItems: 'center',
+        width: 200,               // wider columns
+        maxWidth: 250,
+    },
+    dayHeader: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        textAlign: 'center',
+        marginBottom: 6,
+        color: '#124E57',
+    },
+    scheduleItem: {
+        borderBottomWidth: 1,
+        borderColor: '#ccc',
+        paddingVertical: 6,
+    },
+    scheduleText: {
+        fontSize: 14,
+        textAlign: 'center', // center text within each card
+    },
+    noClassesText: {
+        textAlign: 'center',
+        color: '#888',
+        fontSize: 14,
+        marginTop: 4,
     },
 });
 

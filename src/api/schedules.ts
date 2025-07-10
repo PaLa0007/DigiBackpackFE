@@ -25,6 +25,12 @@ export const fetchScheduleForStudent = async (studentId: number): Promise<Schedu
     return response.data;
 };
 
+// Get schedule for a specific teacher (by ID)
+export const fetchScheduleForTeacher = async (teacherId: number): Promise<Schedule[]> => {
+    const response = await api.get<Schedule[]>(`/schedules/teacher/${teacherId}`);
+    return response.data;
+};
+
 // Get schedule for specific grade
 export const fetchSchedulesByGrade = async (grade: string): Promise<Schedule[]> => {
     const response = await api.get<Schedule[]>(`/schedules/grade/${grade}`);
